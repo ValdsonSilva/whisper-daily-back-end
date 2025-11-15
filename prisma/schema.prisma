@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // passar no env url do banco na nuvem
+}
+
+enum RitualStatus {
+  PLANNED // antes do check-in noturno
+  COMPLETED // respondeu "Sim"
+  MISSED // respondeu "Não"
+}
+
+enum Language {
+  pt_BR
+  en_US
+  es_ES
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  displayName String?
+  nickname    String? // "apelido" no app
+  locale      Language @default(en_US)
+  timezone    String // ex: "America/Fortaleza"
+
+  // Preferências do ritual
+  checkInHour   Int     @default(20) // 0..23 hora local para notificação
+  checkInMinute Int     @default(0) // 0..59
+  soundEnabled  Boolean @default(false)
+  soundId       String? // FK (AmbientSound.id) opcional
+
+  // Relacionamentos
+  rituals RitualDay[]
+  notes   Note[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sound AmbientSound? @relation(fields: [soundId], references: [id])
+}
+
+model AmbientSound {
+  id     String  @id @default(cuid())
+  key    String  @unique // ex: "rain", "forest", "white_noise"
+  title  String
+  // URL do asset (pode ser CDN ou path relativo do app)
+  url    String
+  active Boolean @default(true)
+
+  users User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RitualDay {
+  id        String   @id @default(cuid())
+  userId    String
+  // data local do usuário (sem horário) para garantir unicidade por dia
+  localDate DateTime @db.Date
+  // também guardamos timestamps absolutos em UTC para auditoria
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Momento da manhã ("Hoje eu vou…")
+  title  String // objetivo principal do dia
+  note   String? // nota opcional
+  status RitualStatus @default(PLANNED)
+
+  // Check-in noturno
+  checkInAt DateTime? // quando respondeu
+  achieved  Boolean? // null=sem resposta, true/false=sim/não
+  aiReply   String? // 2–4 frases empáticas
+  microStep String? // sugestão curta para amanhã
+
+  // Subtarefas
+  subtasks Subtask[]
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, localDate]) // 1 ritual por dia por usuário
+  @@index([userId, localDate])
+  @@index([status])
+}
+
+// sub tarefas para alcançar a tarefa principal / total
+model Subtask {
+  id       String  @id @default(cuid())
+  ritualId String
+  content  String
+  done     Boolean @default(false)
+  order    Int     @default(0)
+
+  ritual RitualDay @relation(fields: [ritualId], references: [id])
+
+  @@index([ritualId])
+  @@index([done])
+}
+
+model Note {
+  id         String    @id @default(cuid())
+  userId     String
+  title      String?
+  content    String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  archivedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+// Opcional futuro (não usar no MVP se quiser enxuto):
+// model Achievement { ... }  // micro conquistas tipo "5 dias seguidos"
