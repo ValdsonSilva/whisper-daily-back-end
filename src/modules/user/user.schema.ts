@@ -2,7 +2,8 @@ import { z } from "zod";
 
 // Params genéricos com id
 export const idParamsSchema = z.object({
-  id: z.cuid("id é inválido"),
+  id: z.string().min(1, 'Id obrigatório')
+  // id: z.cuid("id é inválido"),
   // se estiver usando cuid: z.cuid("id inválido");
   // se for UUID: z.string().uuid("id inválido");
 });

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">77.77% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>7/9</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>1/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">60% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>3/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -76,31 +76,31 @@
 <a name='L11'></a><a href='#L11'>11</a>
 <a name='L12'></a><a href='#L12'>12</a>
 <a name='L13'></a><a href='#L13'>13</a>
-<a name='L14'></a><a href='#L14'>14</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L14'></a><a href='#L14'>14</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import fp from 'fastify-plugin';</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import fp from 'fastify-plugin';
 import { ZodType } from 'zod';
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export default fp(<span class="fstat-no" title="function not covered" >async </span>(app: any) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  app.setValidatorCompiler(<span class="fstat-no" title="function not covered" >({</span> schema }: any) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >(d</span>ata: any) =&gt; {</span>
-      const parsed = (<span class="cstat-no" title="statement not covered" >schema as ZodType).safeParse(data);</span>
-<span class="cstat-no" title="statement not covered" >      return parsed.success ? { value: parsed.data } : { error: parsed.error };</span>
+export default fp(async (app: any) =&gt; {
+  app.setValidatorCompiler(({ schema }: any) =&gt; {
+    return (data: any) =&gt; {
+      const parsed = (schema as ZodType).safeParse(data);
+      return parsed.success ? { value: parsed.data } : <span class="branch-1 cbranch-no" title="branch not covered" >{ error: parsed.error };</span>
     };
   });
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  app.setSerializerCompiler(<span class="fstat-no" title="function not covered" >() =</span>&gt; <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(p</span>ayload: any) =&gt; <span class="cstat-no" title="statement not covered" >JSON.stringify(payload))</span></span>;</span>
+  app.setSerializerCompiler(<span class="fstat-no" title="function not covered" >() =</span>&gt; <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(p</span>ayload: any) =&gt; <span class="cstat-no" title="statement not covered" >JSON.stringify(payload))</span></span>;
 });
 &nbsp;</pre></td></tr></table></pre>
 
@@ -109,7 +109,7 @@ import { ZodType } from 'zod';
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-15T00:32:38.269Z
+                at 2025-11-18T02:33:18.131Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

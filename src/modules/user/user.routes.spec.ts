@@ -1,27 +1,37 @@
-import Fastify from "fastify";
-import { userRoutes } from "../user.routes";
-import { UserRepo } from "../user.repo";
-import { describe, it } from "node:test";
+import Fastify, { FastifyInstance } from "fastify";
+import { userRoutes } from "./user.routes";
+import { UserRepo } from "./user.repo";
+import { describe } from "node:test";
+import { User } from "@prisma/client";
+import zodValidator from "../../core/http/plugins/zodValidator";
 
-jest.mock('../user.repo');
+/**
+ * var - escopo global (acessada dentro e fora da classe)
+ * let - escopo de bloco/função (acessada apenas no bloco onde declarada)
+ * const - escopo global dentro da classe/função (acessada apenas dentro da classe)
+*/
+
+jest.mock('./user.repo');
+
+var mockedUserRepo = UserRepo as jest.Mocked<typeof UserRepo>;
 
 describe("User routes", () => {
-    let app: ReturnType<typeof Fastify>;
-    const mockedUserRepo = UserRepo as jest.Mocked<typeof UserRepo>;
+    let app: FastifyInstance;
 
     beforeAll(async () => {
         app = Fastify();
-        await app.register(userRoutes); // 👈 registra o plugin
-        await app.ready();
+        app.register(zodValidator)
+        app.register(userRoutes)
+        app.ready();  // Certifique-se de que o app está pronto para receber requisições
     });
 
     afterAll(async () => {
-        await app.close();
+        app.close();
     });
 
     // ---------- GET /users ----------
-    it("GET /users - deve retornar 200 e lista de usuários", async () => {
-        const fakeUsers = [{ id: "1", email: "a@a.com" }] as any[];
+    test("GET /users - deve retornar 200 e lista de usuários", async () => {
+        const fakeUsers = [{ id: "1", email: "a@a.com" }] as User[];
 
         mockedUserRepo.listAllUsers.mockResolvedValueOnce(fakeUsers);
 
@@ -33,12 +43,12 @@ describe("User routes", () => {
         expect(res.statusCode).toBe(200);
 
         const body = res.json();
-        expect(body).toHaveProperty("users");
+        expect(body).toHaveProperty<User[]>("users");
         expect(body.users).toHaveLength(1);
         expect(body.users[0].id).toBe("1");
     });
 
-    it("GET /users - deve retornar 404 quando não houver usuários", async () => {
+    test("GET /users - deve retornar 404 quando não houver usuários", async () => {
         mockedUserRepo.listAllUsers.mockResolvedValueOnce([]);
 
         const res = await app.inject({
@@ -52,7 +62,7 @@ describe("User routes", () => {
         expect(body).toHaveProperty("message", "Usuários não encontrados");
     });
 
-    it("GET /users - deve retornar 500 em erro inesperado", async () => {
+    test("GET /users - deve retornar 500 em erro inesperado", async () => {
         mockedUserRepo.listAllUsers.mockRejectedValueOnce(
             new Error("Erro de banco")
         );
@@ -69,7 +79,7 @@ describe("User routes", () => {
     });
 
     // ---------- GET /users/:id ----------
-    it("GET /users/:id - deve retornar 200 e o usuário", async () => {
+    test("GET /users/:id - deve retornar 200 e o usuário", async () => {
         const fakeUser = { id: "123", email: "b@b.com" } as any;
 
         mockedUserRepo.listUserById.mockResolvedValueOnce(fakeUser);
@@ -80,13 +90,12 @@ describe("User routes", () => {
         });
 
         expect(res.statusCode).toBe(200);
-
         const body = res.json();
         expect(body).toHaveProperty("user");
         expect(body.user.id).toBe("123");
     });
 
-    it("GET /users/:id - deve retornar 404 se usuário não existir", async () => {
+    test("GET /users/:id - deve retornar 404 se usuário não existir", async () => {
         mockedUserRepo.listUserById.mockResolvedValueOnce(null);
 
         const res = await app.inject({
@@ -100,7 +109,7 @@ describe("User routes", () => {
         expect(body).toHaveProperty("message", "Usuário não encontrado");
     });
 
-    it("GET /users/:id - deve retornar 500 em erro inesperado", async () => {
+    test("GET /users/:id - deve retornar 500 em erro inesperado", async () => {
         mockedUserRepo.listUserById.mockRejectedValueOnce(
             new Error("Erro de banco")
         );
@@ -117,7 +126,7 @@ describe("User routes", () => {
     });
 
     // ---------- POST /users ----------
-    it("POST /users - deve criar usuário e retornar 201", async () => {
+    test("POST /users - deve criar usuário e retornar 201", async () => {
         const payload = {
             email: "novo@user.com",
             timezone: "America/Fortaleza",
@@ -141,7 +150,7 @@ describe("User routes", () => {
         expect(mockedUserRepo.createUser).toHaveBeenCalledWith(payload);
     });
 
-    it("POST /users - deve retornar 500 em erro inesperado", async () => {
+    test("POST /users - deve retornar 500 em erro inesperado", async () => {
         const payload = {
             email: "erro@user.com",
             timezone: "America/Fortaleza",
@@ -164,7 +173,7 @@ describe("User routes", () => {
     });
 
     // ---------- PUT /users/:id ----------
-    it("PUT /users/:id - deve atualizar usuário e retornar 200", async () => {
+    test("PUT /users/:id - deve atualizar usuário e retornar 200", async () => {
         const payload = {
             displayName: "Nome Atualizado",
         };
@@ -187,7 +196,7 @@ describe("User routes", () => {
         expect(mockedUserRepo.updateUser).toHaveBeenCalledWith("123", payload);
     });
 
-    it("PUT /users/:id - deve retornar 500 em erro inesperado", async () => {
+    test("PUT /users/:id - deve retornar 500 em erro inesperado", async () => {
         const payload = {
             displayName: "Erro",
         };
@@ -209,7 +218,7 @@ describe("User routes", () => {
     });
 
     // ---------- DELETE /users/:id ----------
-    it("DELETE /users/:id - deve excluir usuário e retornar 200", async () => {
+    test("DELETE /users/:id - deve excluir usuário e retornar 200", async () => {
         const fakeUser = { id: "123", email: "d@d.com" } as any;
 
         mockedUserRepo.deleteUser.mockResolvedValueOnce(fakeUser);
@@ -228,7 +237,7 @@ describe("User routes", () => {
         expect(mockedUserRepo.deleteUser).toHaveBeenCalledWith("123");
     });
 
-    it("DELETE /users/:id - deve retornar 500 em erro inesperado", async () => {
+    test("DELETE /users/:id - deve retornar 500 em erro inesperado", async () => {
         mockedUserRepo.deleteUser.mockRejectedValueOnce(
             new Error("Erro ao excluir")
         );

@@ -9,6 +9,7 @@ module.exports = {
         "src/**/*.ts",
         "!src/**/tests/**",      // não contar arquivos de teste
         "!src/generated/**",     // não contar o client do prisma gerado
+        "src/modules/**/tests/*.ts"
     ],
     coverageDirectory: "coverage",
     coverageReporters: ["text", "lcov", "html"],

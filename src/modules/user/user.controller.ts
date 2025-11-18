@@ -18,9 +18,7 @@ export const UserController = {
 
             return reply.code(200).send({ users });
         } catch (error: any) {
-            return reply
-                .code(500)
-                .send({ message: "Erro ao listar usuários", error });
+            return reply.code(500).send({ message: "Erro ao listar usuários", error });
         }
     },
 
@@ -39,9 +37,7 @@ export const UserController = {
 
             return reply.code(200).send({ user });
         } catch (error: any) {
-            return reply
-                .code(500)
-                .send({ message: "Erro ao buscar usuário", error });
+            return reply.code(500).send({ message: "Erro ao buscar usuário", error });
         }
     },
 
@@ -56,9 +52,7 @@ export const UserController = {
 
             return reply.code(201).send({ user });
         } catch (error: any) {
-            return reply
-                .code(500)
-                .send({ message: "Erro ao criar usuário", error });
+            return reply.code(500).send({ message: "Erro ao criar usuário", error });
         }
     },
 
@@ -75,9 +69,7 @@ export const UserController = {
             return reply.code(200).send({ user });
         } catch (error: any) {
             // Se quiser, aqui dá pra tratar P2025 (registro não encontrado) como 404
-            return reply
-                .code(500)
-                .send({ message: "Erro ao atualizar usuário", error });
+            return reply.code(500).send({ message: "Erro ao atualizar usuário", error });
         }
     },
 
@@ -90,13 +82,9 @@ export const UserController = {
 
             const user = await UserRepo.deleteUser(id);
 
-            return reply
-                .code(200)
-                .send({ message: "Usuário excluído com sucesso", user });
+            return reply.code(200).send({ message: "Usuário excluído com sucesso", user });
         } catch (error: any) {
-            return reply
-                .code(500)
-                .send({ message: "Erro ao excluir usuário", error });
+            return reply.code(500).send({ message: "Erro ao excluir usuário", error });
         }
     },
 };

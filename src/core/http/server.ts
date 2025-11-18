@@ -11,7 +11,7 @@ import { soundRoutes } from '../../modules/sound/sound.routes';
 import { ritualRoutes } from '../../modules/ritual/ritual.routes';
 import { noteRoutes } from '../../modules/note/note.routes';
 
-const app = Fastify({ logger: true });
+export const app = Fastify({ logger: true });
 
 await app.register(security);
 await app.register(zodValidator);
