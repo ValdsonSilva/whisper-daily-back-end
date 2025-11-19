@@ -6,7 +6,7 @@ export const RitualRepo = {
 
     // ---------- Básico ----------
     findById: async (id: string): Promise<RitualDay | null> => {
-        return prisma.ritualDay.findUnique({
+        return await prisma.ritualDay.findUnique({
             where: { id },
             include: { subtasks: true },
         });
@@ -16,7 +16,7 @@ export const RitualRepo = {
         userId: string,
         localDate: Date
     ): Promise<RitualDay | null> => {
-        return prisma.ritualDay.findUnique({
+        return await prisma.ritualDay.findUnique({
             where: {
                 userId_localDate: { userId, localDate },
             },
@@ -25,7 +25,7 @@ export const RitualRepo = {
     },
 
     listByUser: async (userId: string): Promise<RitualDay[]> => {
-        return prisma.ritualDay.findMany({
+        return await prisma.ritualDay.findMany({
             where: { userId },
             orderBy: { localDate: "desc" },
             include: { subtasks: true },
@@ -37,7 +37,7 @@ export const RitualRepo = {
         from: Date,
         to: Date
     ): Promise<RitualDay[]> => {
-        return prisma.ritualDay.findMany({
+        return await prisma.ritualDay.findMany({
             where: {
                 userId,
                 localDate: {
@@ -51,7 +51,7 @@ export const RitualRepo = {
     },
 
     create: async (data: Prisma.RitualDayCreateInput): Promise<RitualDay> => {
-        return prisma.ritualDay.create({
+        return await prisma.ritualDay.create({
             data,
             include: { subtasks: true },
         });
@@ -61,7 +61,7 @@ export const RitualRepo = {
         id: string,
         data: Prisma.RitualDayUpdateInput
     ): Promise<RitualDay> => {
-        return prisma.ritualDay.update({
+        return await prisma.ritualDay.update({
             where: { id },
             data,
             include: { subtasks: true },
@@ -69,7 +69,7 @@ export const RitualRepo = {
     },
 
     delete: async (id: string): Promise<RitualDay> => {
-        return prisma.ritualDay.delete({
+        return await prisma.ritualDay.delete({
             where: { id },
             include: { subtasks: true },
         });
@@ -92,7 +92,7 @@ export const RitualRepo = {
     ): Promise<RitualDay> => {
         const { title, note, subtasks = [] } = input;
 
-        return prisma.ritualDay.upsert({
+        return await prisma.ritualDay.upsert({
             where: {
                 userId_localDate: { userId, localDate },
             },
@@ -140,7 +140,7 @@ export const RitualRepo = {
     ): Promise<RitualDay> => {
         const { achieved, aiReply, microStep } = payload;
 
-        return prisma.ritualDay.update({
+        return await prisma.ritualDay.update({
             where: {
                 userId_localDate: { userId, localDate },
             },

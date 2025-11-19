@@ -90,9 +90,14 @@ export const NoteController = {
 
             const note = await noteRepo.delete(id);
 
+            // Verifica se a nota foi realmente deletada
+            if (!note) {
+                return reply.code(404).send({ message: "Nota não encontrada" });
+            }
+
             return reply.code(200).send({ message: "Nota excluída com sucesso", note });
         } catch (error: any) {
             return reply.code(500).send({ message: "Erro ao excluir nota", error });
         }
-    },
+    }
 };

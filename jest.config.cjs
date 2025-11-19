@@ -11,6 +11,7 @@ module.exports = {
         "!src/generated/**",     // não contar o client do prisma gerado
         "src/modules/**/tests/*.ts"
     ],
-    coverageDirectory: "coverage",
-    coverageReporters: ["text", "lcov", "html"],
+    // coverageDirectory: "coverage",
+    collectCoverage: false,  // Desabilitar cobertura completamente
+    // coverageReporters: ["text", "lcov", "html"],
 };

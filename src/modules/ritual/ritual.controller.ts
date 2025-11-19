@@ -85,11 +85,15 @@ export const RitualController = {
         try {
             const { id } = req.params;
 
-            const ritual = await RitualRepo.delete(id);
+            const findedRitual = await RitualRepo.findById(id);
 
-            return reply
-                .code(200)
-                .send({ message: "Ritual excluído com sucesso", ritual });
+            if (!findedRitual) {
+                return reply.code(404).send({ message: "Ritual não encontrado para exclusão" });
+            }
+
+            const ritual = await RitualRepo.delete(findedRitual.id);
+
+            return reply.code(200).send({ message: "Ritual excluído com sucesso", ritual });
         } catch (error: any) {
             return reply.code(500).send({ message: "Erro ao excluir ritual", error });
         }

@@ -6,3 +6,4 @@ node_modules
 
 /domain
 /use-cases
+coverage/
