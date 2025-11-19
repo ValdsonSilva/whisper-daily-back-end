@@ -10,6 +10,7 @@ import { userRoutes } from '../../modules/user/user.routes';
 import { soundRoutes } from '../../modules/sound/sound.routes';
 import { ritualRoutes } from '../../modules/ritual/ritual.routes';
 import { noteRoutes } from '../../modules/note/note.routes';
+import { whisperRoutes } from '../../modules/AI/AI.routes';
 
 export const app = Fastify({ logger: true });
 
@@ -23,6 +24,7 @@ await app.register(userRoutes);
 await app.register(soundRoutes);
 await app.register(ritualRoutes);
 await app.register(noteRoutes);
+await app.register(whisperRoutes, { prefix: "/api" });
 
 const PORT = Number(process.env.PORT || 3333);
 
