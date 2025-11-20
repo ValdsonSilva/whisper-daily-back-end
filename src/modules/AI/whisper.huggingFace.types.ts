@@ -14,6 +14,7 @@ export interface WhisperRequest {
   message: string;
   mode?: WhisperMode;
   context?: WhisperContext;
+  language?: string
 }
 
 export interface WhisperResponse {

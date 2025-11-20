@@ -1,15 +1,16 @@
 // tests/ritual.routes.spec.ts
 import Fastify from "fastify";
-import { RitualController } from "./ritual.controller";
 import { RitualRepo } from "./ritual.repo";
 import { ritualRoutes } from "./ritual.routes";
 import { describe } from "node:test";
 import zodValidator from "../../core/http/plugins/zodValidator";
 import { RitualDay } from "@prisma/client";
+import { WhisperService } from "../AI/whisper.service";
 
 jest.mock('./ritual.repo');
 
 var mockedRitualRepo = RitualRepo as jest.Mocked<typeof RitualRepo>;
+var mockedWhisperService = WhisperService as jest.Mocked<typeof WhisperService>;
 
 describe('Ritual Routes', () => {
     const app = Fastify();
@@ -174,38 +175,149 @@ describe('Ritual Routes', () => {
     // ---------- Test for POST /rituals/:id/checkin ----------
     test("POST /rituals/:id/checkin should register check-in (200)", async () => {
         const checkInData = { achieved: true, aiReply: "Boa", microStep: "Passo 1" };
-        const checkInRitual = { id: "1", title: "Ler um livro", achieved: true } as RitualDay;
+        const checkInRitual = { id: "1", title: "Ler um livro", note: "Leitura de 30 minutos", achieved: true } as RitualDay;
 
-        mockedRitualRepo.registerCheckIn.mockResolvedValueOnce(checkInRitual);
+        mockedRitualRepo.findById.mockResolvedValueOnce(checkInRitual);  // Mock do RitualRepo.findById
+        mockedWhisperService.generateReply.mockResolvedValueOnce({
+            reply: "Parabéns pela conquista! Como se sentiu ao terminar a tarefa?",
+            safetyMode: false,
+        });
 
         const res = await app.inject({
             path: "/rituals/1/checkin",
             method: "POST",
-            payload: checkInData
-        })
+            payload: checkInData,
+        });
 
         expect(res.statusCode).toBe(200);
         const body = res.json();
         expect(body).toHaveProperty("ritual");
         expect(body.ritual.id).toBe("1");
         expect(body.ritual.achieved).toBe(true);
+        expect(body.ritual.aiReply).toBe("Parabéns pela conquista! Como se sentiu ao terminar a tarefa?");
     });
+
+    // ---------- Test for POST /rituals/:id/checkin ----------
+    test("POST /rituals/:id/checkin should return 404 if ritual is not found", async () => {
+        const checkInData = { achieved: true, aiReply: "Boa", microStep: "Passo 1" };
+
+        mockedRitualRepo.findById.mockResolvedValueOnce(null);  // Mock para retornar null, simulando que o ritual não existe
+
+        const res = await app.inject({
+            path: "/rituals/1/checkin",
+            method: "POST",
+            payload: checkInData,
+        });
+
+        expect(res.statusCode).toBe(404);
+        const body = res.json();
+        expect(body).toHaveProperty("message", "Ritual não encontrado");
+    });
+
+    // ---------- Test for POST /rituals/:id/checkin ----------
+    test("POST /rituals/:id/checkin should return 200 with safetyMode=true when message is sensitive", async () => {
+        const checkInData = { achieved: false, aiReply: "Não consegui hoje", microStep: "Passo 2" };
+        const checkInRitual = { id: "1", title: "Ler um livro", note: "Não tenho mais forças", achieved: false } as RitualDay;
+
+        mockedRitualRepo.findById.mockResolvedValueOnce(checkInRitual);  // Mock do RitualRepo.findById
+        // mockedWhisperService.generateReply.mockResolvedValueOnceD({
+        //     reply: "Sinto muito que você esteja se sentindo assim, isso é realmente pesado. Por favor, procure ajuda.",
+        //     safetyMode: true,
+        // });
+        // Usando jest.spyOn para mockar o método estático da classe WhisperService
+        const spy = jest.spyOn(WhisperService, 'generateReply');
+        spy.mockResolvedValueOnce({
+            reply: "Sinto muito que você esteja se sentindo assim, isso é realmente pesado. Por favor, procure ajuda.",
+            safetyMode: true,
+        });
+
+        const res = await app.inject({
+            path: "/rituals/1/checkin",
+            method: "POST",
+            payload: checkInData,
+        });
+
+        expect(res.statusCode).toBe(200);
+        const body = res.json();
+        expect(body).toHaveProperty("ritual");
+        expect(body.ritual.id).toBe("1");
+        expect(body.ritual.aiReply).toBe("Sinto muito que você esteja se sentindo assim, isso é realmente pesado. Por favor, procure ajuda.");
+        expect(body.ritual.achieved).toBe(false);
+    });
+
 
     // ---------- Test for POST /rituals/upsert ----------
     test("POST /rituals/upsert should create or update ritual (200)", async () => {
-        const ritualData = { userId: "user1", localDate: new Date(), title: "Manhã de Leitura", note: "Leitura de 30 minutos" };
+        const ritualData = {
+            userId: "user1",
+            localDate: new Date(),
+            title: "Manhã de Leitura",
+            note: "Leitura de 30 minutos",
+            subtasks: [{ content: "Abrir o livro" }, { content: "Ler 10 páginas" }]
+        };
 
-        mockedRitualRepo.upsertMorning.mockResolvedValueOnce({ id: "1", ...ritualData } as RitualDay);
+        mockedWhisperService.generateReply.mockResolvedValueOnce({
+            reply: "Que bom que você se dedicou à leitura hoje! Como você se sentiu?",
+            safetyMode: false,
+        });
+
+        mockedRitualRepo.upsertMorning.mockResolvedValueOnce({ id: "1", ...ritualData } as any);
 
         const res = await app.inject({
             path: "/rituals/upsert",
             method: "POST",
-            payload: ritualData
-        })
+            payload: ritualData,
+        });
 
         expect(res.statusCode).toBe(200);
         const body = res.json();
         expect(body).toHaveProperty("ritual");
         expect(body.ritual.title).toBe("Manhã de Leitura");
+        expect(body.ritual.aiReply).toBe("Que bom que você se dedicou à leitura hoje! Como você se sentiu?");
     });
+
+    // ---------- Test for POST /rituals/upsert ----------
+    test("POST /rituals/upsert should return 400 if required parameters are missing", async () => {
+        const ritualData = {
+            userId: "",
+            localDate: new Date(),
+            title: "",  // title está faltando
+            note: "Leitura de 30 minutos",
+            subtasks: ["Abrir o livro", "Ler 10 páginas"]
+        };
+
+        const res = await app.inject({
+            path: "/rituals/upsert",
+            method: "POST",
+            payload: ritualData,
+        });
+
+        expect(res.statusCode).toBe(400);
+        const body = res.json();
+        expect(body).toHaveProperty("message", "UserId & localDate & title são obrigatórios");
+    });
+
+    // ---------- Test for POST /rituals/upsert ----------
+    test("POST /rituals/upsert should return 500 if AI service fails", async () => {
+        const ritualData = {
+            userId: "user1",
+            localDate: new Date(),
+            title: "Manhã de Leitura",
+            note: "Leitura de 30 minutos",
+            subtasks: ["Abrir o livro", "Ler 10 páginas"]
+        };
+
+        mockedWhisperService.generateReply.mockRejectedValueOnce(new Error("Erro na IA"));
+
+        const res = await app.inject({
+            path: "/rituals/upsert",
+            method: "POST",
+            payload: ritualData,
+        });
+
+        expect(res.statusCode).toBe(500);
+        const body = res.json();
+        expect(body).toHaveProperty("message", "Erro ao gerar resposta da IA");
+    });
+
 })

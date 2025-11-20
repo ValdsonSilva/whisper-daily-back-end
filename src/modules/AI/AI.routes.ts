@@ -1,39 +1,3 @@
-// import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
-
-// const app = Fastify();
-// const huggingFaceApiKey = 'your-hugging-face-api-key';
-
-// // Rota para interação com o modelo Llama
-// app.post('/ask', async (req: FastifyRequest, reply: FastifyReply) => {
-//   const { question } = req.body;
-
-//   try {
-//     const response = await app.post(
-//       'https://api-inference.huggingface.co/models/your-model-name',
-//       {
-//         inputs: question,
-//       },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${huggingFaceApiKey}`,
-//         },
-//       }
-//     );
-
-//     reply.status(200).send({ answer: response.data.generated_text });
-//   } catch (error) {
-//     reply.status(500).send({ error: 'Erro ao acessar o modelo', details: error.message });
-//   }
-// });
-
-// app.listen(3000, (err, address) => {
-//   if (err) {
-//     console.error(err);
-//     process.exit(1);
-//   }
-//   console.log(`Server listening at ${address}`);
-// });
-
 // src/modules/whisper/whisper.routes.ts
 import { FastifyInstance } from 'fastify';
 import { WhisperService } from './whisper.service';

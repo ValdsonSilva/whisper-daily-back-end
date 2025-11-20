@@ -1,14 +1,30 @@
+# services:
+#   db:
+#     image: postgres:16
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_USER: app
+#       POSTGRES_PASSWORD: app
+#       POSTGRES_DB: whisperdaily
+#     ports:
+#       - "8080:8080"
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+# volumes:
+#   pgdata:
+
+version: '3'
+
 services:
-  db:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
-      POSTGRES_DB: whisperdaily
-    ports:
-      - "5432:5432"
+  whisper-back-end:
+    container_name: whisper-api
+    build: 
+      context: "./"
+      dockerfile: dockerFile
+    
     volumes:
-      - pgdata:/var/lib/postgresql/data
-volumes:
-  pgdata:
+      - .:/api
+
+    ports:
+      - 8080:8080
+

@@ -1,0 +1,15 @@
+FROM node 
+
+RUN mkdir api
+
+WORKDIR /api
+
+COPY package.json /api/
+
+RUN pnpm add
+
+COPY . .
+
+EXPOSE 8080
+
+CMD [ "pnpm", "dev" ]

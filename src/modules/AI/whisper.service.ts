@@ -4,93 +4,97 @@ import { WhisperRequest, WhisperResponse } from './whisper.huggingFace.types';
 
 // Palavras/expressões de crise simples (pode expandir depois)
 const CRISIS_KEYWORDS = [
-    'suicídio',
-    'me matar',
-    'me matar.',
-    'me matar!',
-    'quero morrer',
-    'quero me matar',
-    'tirar minha vida',
-    'kill myself',
-    'want to die',
-    'suicide',
-    'self-harm',
+  'suicídio',
+  'me matar',
+  'me matar.',
+  'me matar!',
+  'quero morrer',
+  'quero me matar',
+  'tirar minha vida',
+  'kill myself',
+  'want to die',
+  'suicide',
+  'self-harm',
 ];
 
 function containsCrisisSignal(text: string): boolean {
-    const lower = text.toLowerCase();
-    return CRISIS_KEYWORDS.some(k => lower.includes(k));
+  const lower = text.toLowerCase();
+  return CRISIS_KEYWORDS.some(k => lower.includes(k));
 }
 
 // Resposta fixa de safety mode (sem precisar chamar o modelo)
 function buildSafetyResponse(userLanguage: 'pt' | 'en' | 'other'): string {
-    if (userLanguage === 'pt') {
-        return (
-            'Sinto muito que você esteja se sentindo assim, isso é realmente pesado.\n' +
-            'Eu sou só uma IA e não consigo te proteger de verdade.\n' +
-            'Se puder, procure alguém de confiança agora ou um serviço de emergência/saúde mental da sua região.\n' +
-            'Você não precisa passar por isso sozinho(a).'
-        );
-    }
-
-    // Default em inglês
+  if (userLanguage === 'pt') {
     return (
-        "I'm really sorry you're feeling this way, it sounds very heavy.\n" +
-        "I’m only an AI and I can’t keep you safe in real life.\n" +
-        "Please reach out to a trusted person or local emergency / mental health service right now.\n" +
-        "You don’t have to go through this alone."
+      'Sinto muito que você esteja se sentindo assim, isso é realmente pesado.\n' +
+      'Eu sou só uma IA e não consigo te proteger de verdade.\n' +
+      'Se puder, procure alguém de confiança agora ou um serviço de emergência/saúde mental da sua região.\n' +
+      'Você não precisa passar por isso sozinho(a).'
     );
+  }
+
+  // Default em inglês
+  return (
+    "I'm really sorry you're feeling this way, it sounds very heavy.\n" +
+    "I’m only an AI and I can’t keep you safe in real life.\n" +
+    "Please reach out to a trusted person or local emergency / mental health service right now.\n" +
+    "You don’t have to go through this alone."
+  );
 }
 
-function detectLanguage(text: string): 'pt' | 'en' | 'other' {
-    const t = text.toLowerCase();
-    if (/[ãõáéíóúç]/.test(t) || t.includes('que ') || t.includes('não ')) return 'pt';
-    if (/[a-z]/.test(t)) return 'en'; // bem toscão, mas suficiente pra MVP
-    return 'other';
+export function detectLanguage(text: string): 'pt' | 'en' | 'other' {
+  const t = text.toLowerCase();
+  if (/[ãõáéíóúç]/.test(t) || t.includes('que ') || t.includes('não ')) return 'pt';
+  if (/[a-z]/.test(t)) return 'en'; // bem toscão, mas suficiente pra MVP
+  return 'other';
 }
 
 function buildUserContextSnippet(req: WhisperRequest): string {
-    const parts: string[] = [];
+  const parts: string[] = [];
 
-    if (req.mode === 'morning') {
-        parts.push('Mode: morning intention. Help the user find ONE gentle intention for today.');
-    } else if (req.mode === 'night') {
-        parts.push('Mode: night reflection. Help the user reflect kindly on today.');
-    } else {
-        parts.push('Mode: general grounding conversation.');
-    }
+  if (req.mode === 'morning') {
+    parts.push('Mode: morning intention. Help the user find ONE gentle intention for today.');
+  } else if (req.mode === 'night') {
+    parts.push('Mode: night reflection. Help the user reflect kindly on today.');
+  } else {
+    parts.push('Mode: general grounding conversation.');
+  }
 
-    const ctx = req.context;
-    if (!ctx) return parts.join('\n');
+  const ctx = req.context;
+  if (!ctx) return parts.join('\n');
 
-    if (ctx.currentIntention) {
-        parts.push(`Current intention: ${ctx.currentIntention}`);
-    }
-    if (ctx.lastReflectionSummary) {
-        parts.push(`Last reflection summary: ${ctx.lastReflectionSummary}`);
-    }
-    if (typeof ctx.whisperLeafEarnedToday === 'boolean') {
-        parts.push(
-            `WhisperLeaf today: ${ctx.whisperLeafEarnedToday ? 'user has already earned a Leaf today.' : 'no Leaf earned yet today.'
-            }`,
-        );
-    }
-    if (ctx.streakDays != null) {
-        parts.push(`User streak (days in a row using the app): ${ctx.streakDays}`);
-    }
-    if (ctx.lastMessages && ctx.lastMessages.length > 0) {
-        const history = ctx.lastMessages
-            .slice(-5)
-            .map(m => `${m.from === 'user' ? 'User' : 'Whisper'}: ${m.text}`)
-            .join('\n');
-        parts.push('Recent conversation (last messages):\n' + history);
-    }
+  if (ctx.currentIntention) {
+    parts.push(`Current intention: 
+            Today i will ${ctx.currentIntention}.
+          `);
+  }
+  if (ctx.lastReflectionSummary) {
+    parts.push(`Last reflection summary: ${ctx.lastReflectionSummary}`);
+  }
+  if (typeof ctx.whisperLeafEarnedToday === 'boolean') {
+    parts.push(
+      `WhisperLeaf today: ${ctx.whisperLeafEarnedToday ? 'user has already earned a Leaf today.' : 'no Leaf earned yet today.'
+      }`,
+    );
+  }
+  if (ctx.streakDays != null) {
+    parts.push(`User streak (days in a row using the app): ${ctx.streakDays}`);
+  }
+  if (ctx.lastMessages && ctx.lastMessages.length > 0) {
+    const history = ctx.lastMessages
+      .slice(-5)
+      .map(m => `${m.from === 'user' ? 'User' : 'Whisper'}: ${m.text}`)
+      .join('\n');
 
-    return parts.join('\n');
+    parts.push('Recent conversation (last messages):\n' + history);
+  }
+
+  return parts.join('\n');
 }
 
 export class WhisperService {
   static async generateReply(req: WhisperRequest): Promise<WhisperResponse> {
+
     const language = detectLanguage(req.message);
     const inCrisis = containsCrisisSignal(req.message);
 

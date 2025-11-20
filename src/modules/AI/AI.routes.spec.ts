@@ -1,4 +1,3 @@
-// src/modules/ia-module/AI.routes.spec.ts
 import Fastify, { FastifyInstance } from 'fastify';
 import { whisperRoutes } from './AI.routes'; // ajuste o nome/export se for diferente
 import { WhisperService } from '../AI/whisper.service';

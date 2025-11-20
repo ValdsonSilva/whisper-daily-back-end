@@ -2,6 +2,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { Prisma } from "@prisma/client";
 import { RitualRepo } from "./ritual.repo";
+import { detectLanguage, WhisperService } from "../AI/whisper.service";
 
 type IdParams = {
     id: string;
@@ -106,9 +107,35 @@ export const RitualController = {
     ) => {
         try {
             const { id } = req.params;
-            const { achieved, aiReply, microStep } = req.body;
-            const localDate = new Date()
-            const ritual = await RitualRepo.registerCheckIn(id, localDate, { achieved, aiReply, microStep });
+            const { achieved } = req.body;
+
+            const prevRitual = await RitualRepo.findById(id); // ritual previamente criado
+
+            if (!prevRitual) {
+                return reply.status(404).send({ message: "Ritual não encontrado" });
+            }
+
+            const whisperAI = await WhisperService.generateReply({
+                context: {
+                    currentIntention: `${prevRitual.title}. My extra notes: ${prevRitual.note}`,
+                    lastMessages: [
+                        {
+                            from: "user",
+                            text: `${prevRitual.note}`,  // Passando a última mensagem
+                        }
+                    ],
+                },
+                message: `${achieved ? "yes" : "not"} the task: ${prevRitual.title}.`,
+                mode: "night", // Modo de reflexão ao fim do dia
+            });
+
+            if (!whisperAI) {
+                return reply.status(500).send({ message: "Erro no assistente de IA" });
+            }
+
+            const localDate = new Date();
+            const ritual = await RitualRepo.registerCheckIn(id, localDate, { achieved, aiReply: whisperAI.reply });
+            console.log('Ritual salvo:', ritual);
 
             return reply.code(200).send({ ritual });
         } catch (error: any) {
@@ -124,15 +151,41 @@ export const RitualController = {
         try {
             const { userId, localDate, title, note, subtasks } = req.body;
 
+            if (!userId || !localDate || !title) {
+                return reply.status(400).send({ message: "UserId & localDate & title são obrigatórios" });
+            }
+
+            // Chamada à IA para gerar uma reflexão empática sobre a intenção do usuário
+            const whisperAI = await WhisperService.generateReply({
+                context: {
+                    currentIntention: title, // O título da tarefa como intenção do dia
+                    lastMessages: [
+                        {
+                            from: "user",
+                            text: note || "", // Passando a anotação como mensagem
+                        }
+                    ],
+                },
+                message: `Today my intention is to: ${title}. Which small steps could i do to achiev it?`, // Formatação mais reflexiva para IA
+                mode: "morning", // Modo de intenção para o começo do dia
+            });
+
+            if (!whisperAI) {
+                return reply.status(500).send({ message: "Erro ao gerar resposta da IA" });
+            }
+
+            // Agora vamos criar ou atualizar o ritual da manhã no banco de dados
             const ritual = await RitualRepo.upsertMorning(userId, localDate, {
                 title,
                 note,
                 subtasks,
             });
 
-            return reply.code(200).send({ ritual });
+            // Incluímos a resposta da IA no retorno
+            return reply.code(200).send({ ritual, aiReply: whisperAI.reply });
         } catch (error: any) {
             return reply.code(500).send({ message: "Erro ao criar ou atualizar ritual da manhã", error });
         }
-    },
+    }
+
 };
