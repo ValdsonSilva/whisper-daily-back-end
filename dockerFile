@@ -4,7 +4,7 @@ RUN mkdir api
 
 WORKDIR /api
 
-COPY package.json /api/
+COPY package.json .
 
 RUN pnpm add
 

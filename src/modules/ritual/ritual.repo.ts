@@ -2,7 +2,7 @@
 import { Prisma, RitualDay, RitualStatus } from "@prisma/client";
 import { prisma } from "../../core/config/prisma";
 import { WhisperService } from "../AI/whisper.service";
-import {WhisperRequest, WhisperResponse} from "../AI/whisper.huggingFace.types";
+import { WhisperRequest, WhisperResponse } from "../AI/whisper.huggingFace.types";
 
 export const RitualRepo = {
 

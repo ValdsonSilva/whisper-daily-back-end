@@ -1,6 +1,6 @@
 // src/modules/ritual/ritual.controller.ts
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Prisma } from "@prisma/client";
+import { Prisma, User } from "@prisma/client";
 import { RitualRepo } from "./ritual.repo";
 import { detectLanguage, WhisperService } from "../AI/whisper.service";
 
@@ -102,36 +102,40 @@ export const RitualController = {
 
     // ---------- POST /rituals/:id/checkin ----------
     registerCheckIn: async (
-        req: FastifyRequest<{ Params: IdParams; Body: { achieved: boolean; aiReply?: string; microStep?: string } }>,
+        req: FastifyRequest<{ Params: { id: string }; Body: { achieved: boolean; aiReply?: string; microStep?: string } }>,
         reply: FastifyReply
     ) => {
         try {
             const { id } = req.params;
             const { achieved } = req.body;
 
-            const prevRitual = await RitualRepo.findById(id); // ritual previamente criado
+            const prevRitual = await RitualRepo.listByUser(id); // ritual previamente criado do usuário
 
-            if (!prevRitual) {
+            if (prevRitual.length === 0) {
                 return reply.status(404).send({ message: "Ritual não encontrado" });
             }
 
+            console.log(`Ritual encontrado: ${prevRitual[0]}`);
+
             const whisperAI = await WhisperService.generateReply({
                 context: {
-                    currentIntention: `${prevRitual.title}. My extra notes: ${prevRitual.note}`,
+                    currentIntention: `${prevRitual[0].title}. My extra notes: ${prevRitual[0].note}`,
                     lastMessages: [
                         {
                             from: "user",
-                            text: `${prevRitual.note}`,  // Passando a última mensagem
+                            text: `${prevRitual[0].note}`,  // Passando a última mensagem
                         }
                     ],
                 },
-                message: `${achieved ? "yes" : "not"} the task: ${prevRitual.title}.`,
+                message: `${achieved ? "yes" : "not"} the task: ${prevRitual[0].title}.`,
                 mode: "night", // Modo de reflexão ao fim do dia
             });
 
             if (!whisperAI) {
                 return reply.status(500).send({ message: "Erro no assistente de IA" });
             }
+
+            console.log(`\nResposta da IA: ${whisperAI}`);
 
             const localDate = new Date();
             const ritual = await RitualRepo.registerCheckIn(id, localDate, { achieved, aiReply: whisperAI.reply });
