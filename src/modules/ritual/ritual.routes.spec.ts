@@ -4,8 +4,8 @@ import { RitualRepo } from "./ritual.repo";
 import { ritualRoutes } from "./ritual.routes";
 import { describe } from "node:test";
 import zodValidator from "../../core/http/plugins/zodValidator";
-import { RitualDay } from "@prisma/client";
-import { WhisperService } from "../AI/whisper.service";
+import prismaPkg from '@prisma/client';
+const { RitualDay } = prismaPkg; import { WhisperService } from "../AI/whisper.service";
 
 jest.mock('./ritual.repo');
 // jest.mock('../AI/whisper.service');

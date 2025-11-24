@@ -1,8 +1,6 @@
 // src/modules/ritual/ritual.repo.ts
-import { Prisma, RitualDay, RitualStatus } from "@prisma/client";
+import type { Prisma, RitualDay } from "@prisma/client";
 import { prisma } from "../../core/config/prisma";
-import { WhisperService } from "../AI/whisper.service";
-import { WhisperRequest, WhisperResponse } from "../AI/whisper.huggingFace.types";
 
 export const RitualRepo = {
 
@@ -103,7 +101,7 @@ export const RitualRepo = {
                 localDate,
                 title,
                 note,
-                status: RitualStatus.PLANNED,
+                status: "PLANNED",
                 subtasks: {
                     create: subtasks.map((st, index) => ({
                         content: st.content,
@@ -148,7 +146,7 @@ export const RitualRepo = {
             },
             data: {
                 achieved,
-                status: achieved ? RitualStatus.COMPLETED : RitualStatus.MISSED,
+                status: achieved ? "COMPLETED" : "MISSED",
                 checkInAt: new Date(),
                 aiReply,
                 microStep,

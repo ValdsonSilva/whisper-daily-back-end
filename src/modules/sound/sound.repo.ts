@@ -1,4 +1,4 @@
-import { AmbientSound, Prisma } from "@prisma/client";
+import type {AmbientSound, Prisma} from '@prisma/client';
 import { prisma } from "../../core/config/prisma";
 
 export const SoundRepo = {

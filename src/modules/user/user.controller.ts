@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { UserRepo } from "./user.repo";
-import { Prisma } from "@prisma/client";
-
+import prismaPkg from '@prisma/client';
+const { Prisma } = prismaPkg;
 type IdParams = {
     id: string;
 };

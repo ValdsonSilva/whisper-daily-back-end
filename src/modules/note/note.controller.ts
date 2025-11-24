@@ -1,7 +1,7 @@
 // src/modules/note/note.controller.ts
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Prisma } from "@prisma/client";
-import { noteRepo } from "./note.repo";
+import prismaPkg from '@prisma/client';
+const { Prisma } = prismaPkg; import { noteRepo } from "./note.repo";
 
 type IdParams = {
     id: string;

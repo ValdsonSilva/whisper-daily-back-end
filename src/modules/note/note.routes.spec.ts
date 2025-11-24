@@ -4,8 +4,8 @@ import { noteRepo } from "./note.repo";
 import { describe } from "node:test";
 import zodValidator from "../../core/http/plugins/zodValidator";
 import { noteRoutes } from "./note.routes";
-import { Note } from "@prisma/client";
-
+import prismaPkg from '@prisma/client';
+const { Note } = prismaPkg;
 jest.mock('./note.repo');
 
 var mockedNoteRepo = noteRepo as jest.Mocked<typeof noteRepo>;

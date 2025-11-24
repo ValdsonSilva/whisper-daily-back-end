@@ -2,7 +2,7 @@ import 'dotenv/config'
 // Isso garante que process.env.DATABASE_URL estará preenchida antes do Prisma tentar conectar.
 
 import Fastify from 'fastify';
-import prismaPlugin from './plugins/prisma';
+import prismaPlugin from './plugins/prisma.js';
 import security from './plugins/security';
 import zodValidator from './plugins/zodValidator';
 import healthRoutes from '../../modules/health/health.routes';

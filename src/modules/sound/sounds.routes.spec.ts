@@ -3,8 +3,8 @@ import Fastify, { FastifyInstance } from "fastify";
 import { SoundController } from "./sound.controller";
 import { SoundRepo } from "./sound.repo";
 import { soundRoutes } from "./sound.routes";
-import { AmbientSound } from "@prisma/client";
-
+import prismaPkg from '@prisma/client';
+const { AmbientSound } = prismaPkg;
 jest.mock("./sound.repo");
 
 // Helper pra acessar os mocks com type any e não brigar com o TS

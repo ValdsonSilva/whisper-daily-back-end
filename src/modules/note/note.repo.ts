@@ -1,4 +1,4 @@
-import { Note, Prisma } from "@prisma/client";
+import type {Note, Prisma} from '@prisma/client';
 import { prisma } from "../../core/config/prisma";
 
 export const noteRepo = {

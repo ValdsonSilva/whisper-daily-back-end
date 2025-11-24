@@ -1,15 +1,21 @@
-// prisma.config.ts
-import 'dotenv/config';
-import { defineConfig, env } from 'prisma/config';
+// import pkg from '@prisma/client';
+// import fp from 'fastify-plugin';
 
-export default defineConfig({
-  schema: 'prisma/schema.prisma',
+// const { PrismaClient } = pkg;
 
-  migrations: {
-    path: 'prisma/migrations',
-  },
+// declare module 'fastify' {
+//     interface FastifyInstance {
+//         prisma: PrismaClient;
+//     }
+// }
 
-  datasource: {
-    url: env('DATABASE_URL'),
-  },
-});
+// export default fp(async (app) => {
+//     const prisma = new PrismaClient();
+//     await prisma.$connect();
+
+//     app.decorate('prisma', prisma);
+
+//     app.addHook('onClose', async (instance) => {
+//         await instance.prisma.$disconnect();
+//     });
+// });

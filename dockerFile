@@ -1,15 +1,25 @@
-FROM node 
-
-RUN mkdir api
+FROM node:20
 
 WORKDIR /api
 
-COPY package.json .
+# habilita pnpm
+RUN npm install -g pnpm
 
-RUN pnpm add
+# 1) copiar manifestos
+COPY package.json pnpm-lock.yaml ./
 
+# 2) instalar dependências
+RUN pnpm install --frozen-lockfile
+
+# 3) copiar schema do prisma
+COPY prisma ./prisma
+
+# 4) gerar o Prisma Client
+RUN npx prisma generate
+
+# 5) copiar o resto do código
 COPY . .
 
 EXPOSE 8080
 
-CMD [ "pnpm", "dev" ]
+CMD ["pnpm", "dev"]

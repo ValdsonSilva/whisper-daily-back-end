@@ -1,7 +1,7 @@
 // src/modules/ritual/ritual.controller.ts
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Prisma, User } from "@prisma/client";
-import { RitualRepo } from "./ritual.repo";
+import prismaPkg from '@prisma/client';
+const { Prisma, User } = prismaPkg; import { RitualRepo } from "./ritual.repo";
 import { detectLanguage, WhisperService } from "../AI/whisper.service";
 
 type IdParams = {

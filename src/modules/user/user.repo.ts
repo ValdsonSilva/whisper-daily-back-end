@@ -1,5 +1,6 @@
-import { Prisma, User } from "@prisma/client";
+import type { Prisma, User } from '@prisma/client';
 import { prisma } from "../../core/config/prisma";
+// const { Prisma, User } = prismaPkg;
 
 export const UserRepo = {
 
