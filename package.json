@@ -15,7 +15,8 @@
     "prisma:dev": "prisma format && prisma migrate dev",
     "prisma:generate": "prisma generate",
     "seed": "tsx prisma/seed.ts",
-    "clean:coverage": "rimraf coverage"
+    "clean:coverage": "rimraf coverage",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
