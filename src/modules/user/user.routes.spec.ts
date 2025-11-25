@@ -2,8 +2,8 @@ import Fastify, { FastifyInstance } from "fastify";
 import { userRoutes } from "./user.routes";
 import { UserRepo } from "./user.repo";
 import { describe } from "node:test";
-import prismaPkg from '@prisma/client';
-const { User } = prismaPkg; import zodValidator from "../../core/http/plugins/zodValidator";
+import type { User } from '@prisma/client';
+import zodValidator from "../../core/http/plugins/zodValidator";
 
 /**
  * var - escopo global (acessada dentro e fora da classe)

@@ -5,7 +5,6 @@ import { describe } from "node:test";
 import zodValidator from "../../core/http/plugins/zodValidator";
 import { noteRoutes } from "./note.routes";
 import prismaPkg from '@prisma/client';
-const { Note } = prismaPkg;
 jest.mock('./note.repo');
 
 var mockedNoteRepo = noteRepo as jest.Mocked<typeof noteRepo>;
@@ -62,7 +61,7 @@ describe('Note Routes', () => {
     test("GET /notes/:id should return a note (200)", async () => {
         const fakeNote = { id: "1", title: "Note 1", content: "Content 1" };
 
-        mockedNoteRepo.listNoteById.mockResolvedValueOnce(fakeNote as Note);
+        mockedNoteRepo.listNoteById.mockResolvedValueOnce(fakeNote as any);
 
         const res = await app.inject({
             path: "/notes/1",
@@ -93,7 +92,7 @@ describe('Note Routes', () => {
         const newNote = { title: "New Note", content: "New Content" };
         const createdNote = { id: "1", ...newNote };
 
-        mockedNoteRepo.create.mockResolvedValueOnce(createdNote as Note);
+        mockedNoteRepo.create.mockResolvedValueOnce(createdNote as any);
 
         const res = await app.inject({
             path: "/notes",
@@ -126,7 +125,7 @@ describe('Note Routes', () => {
         const updateData = { title: "Updated Note" };
         const updatedNote = { id: "1", title: "Updated Note", content: "Updated Content" };
 
-        mockedNoteRepo.update.mockResolvedValueOnce(updatedNote as Note);
+        mockedNoteRepo.update.mockResolvedValueOnce(updatedNote as any);
 
         const res = await app.inject({
             path: "/notes/1",
@@ -158,7 +157,7 @@ describe('Note Routes', () => {
     test("DELETE /notes/:id should delete a note (200)", async () => {
         const deletedNote = { id: "1", title: "Deleted Note", content: "Deleted Content" };
 
-        mockedNoteRepo.delete.mockResolvedValueOnce(deletedNote as Note);
+        mockedNoteRepo.delete.mockResolvedValueOnce(deletedNote as any);
 
         const res = await app.inject({
             path: "/notes/1",
