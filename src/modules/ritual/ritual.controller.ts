@@ -1,8 +1,8 @@
 // src/modules/ritual/ritual.controller.ts
 import { FastifyReply, FastifyRequest } from "fastify";
-import prismaPkg from '@prisma/client';
-const { Prisma, User } = prismaPkg; import { RitualRepo } from "./ritual.repo";
-import { detectLanguage, WhisperService } from "../AI/whisper.service";
+import type { Prisma } from '@prisma/client';
+import { RitualRepo } from "./ritual.repo";
+import { WhisperService } from "../AI/whisper.service";
 
 type IdParams = {
     id: string;
@@ -86,7 +86,11 @@ export const RitualController = {
         try {
             const { id } = req.params;
 
+            console.log(`Tentando excluir ritual com id: ${id}`);
+
             const findedRitual = await RitualRepo.findById(id);
+
+            console.log("Ritual encontrado: ", findedRitual);
 
             if (!findedRitual) {
                 return reply.code(404).send({ message: "Ritual não encontrado para exclusão" });

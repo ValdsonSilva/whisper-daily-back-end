@@ -4,8 +4,7 @@ import { RitualRepo } from "./ritual.repo";
 import { ritualRoutes } from "./ritual.routes";
 import { describe } from "node:test";
 import zodValidator from "../../core/http/plugins/zodValidator";
-import prismaPkg from '@prisma/client';
-const { RitualDay } = prismaPkg; import { WhisperService } from "../AI/whisper.service";
+import { WhisperService } from "../AI/whisper.service";
 
 jest.mock('./ritual.repo');
 // jest.mock('../AI/whisper.service');
@@ -33,7 +32,7 @@ describe('Ritual Routes', () => {
 
     // ---------- Test for GET /rituals ----------
     test("GET /rituals should list all rituals from the user (200)", async () => {
-        const fakeRituals = [{ id: "1", title: "Devo rezar o rosário" } as RitualDay];
+        const fakeRituals = [{ id: "1", title: "Devo rezar o rosário" } as any];
 
         mockedRitualRepo.listByUser.mockResolvedValueOnce(fakeRituals);
 
@@ -64,7 +63,7 @@ describe('Ritual Routes', () => {
 
     // ---------- Test for GET /rituals/:id ----------
     test("GET /rituals/:id should return a ritual (200)", async () => {
-        const fakeRitual = { id: "1", title: "Devo rezar o rosário" } as RitualDay;
+        const fakeRitual = { id: "1", title: "Devo rezar o rosário" } as any;
 
         mockedRitualRepo.findById.mockResolvedValueOnce(fakeRitual);
 
@@ -95,7 +94,7 @@ describe('Ritual Routes', () => {
     // ---------- Test for POST /rituals ----------
     test("POST /rituals should create a ritual (201)", async () => {
         const newRitual = { title: "Ler um livro", note: "Uma hora de leitura" };
-        const createdRitual = { id: "1", ...newRitual } as RitualDay;
+        const createdRitual = { id: "1", ...newRitual } as any;
 
         mockedRitualRepo.create.mockResolvedValueOnce(createdRitual);
 
@@ -114,7 +113,7 @@ describe('Ritual Routes', () => {
     // ---------- Test for PUT /rituals/:id ----------
     test("PUT /rituals/:id should update a ritual (200)", async () => {
         const updateData = { title: "Ler um livro - Atualizado" };
-        const updatedRitual = { id: "1", title: "Ler um livro - Atualizado", note: "Uma hora de leitura" } as RitualDay;
+        const updatedRitual = { id: "1", title: "Ler um livro - Atualizado", note: "Uma hora de leitura" } as any;
 
         mockedRitualRepo.update.mockResolvedValueOnce(updatedRitual);
 
@@ -148,7 +147,7 @@ describe('Ritual Routes', () => {
     test("DELETE /rituals/:id should delete a ritual (200)", async () => {
         const deletedRitual = { id: "1", title: "Ler um livro", note: "Uma hora de leitura", localDate: new Date() };
 
-        mockedRitualRepo.delete.mockResolvedValueOnce(deletedRitual as RitualDay);
+        mockedRitualRepo.delete.mockResolvedValueOnce(deletedRitual as any);
 
         const res = await app.inject({
             path: "/rituals/1",
@@ -182,7 +181,7 @@ describe('Ritual Routes', () => {
             userId: "1",
             title: "Ler um livro",
             note: "Leitura de 30 minutos",
-        } as RitualDay;
+        } as any;
 
         // 1) listByUser retorna um ritual pra esse userId
         mockedRitualRepo.listByUser.mockResolvedValueOnce([existingRitual]);
@@ -200,7 +199,7 @@ describe('Ritual Routes', () => {
             ...existingRitual,
             achieved: true,
             aiReply: "Parabéns pela conquista! Como se sentiu ao terminar a tarefa?",
-        } as RitualDay;
+        } as any;
 
         mockedRitualRepo.registerCheckIn.mockResolvedValueOnce(updatedRitual);
 
@@ -262,7 +261,7 @@ describe('Ritual Routes', () => {
             title: "Ler um livro",
             note: "Não tenho mais forças",
             achieved: false,
-        } as RitualDay;
+        } as any;
 
         const expectedReply =
             "Sinto muito que você esteja se sentindo assim, isso é realmente pesado. Por favor, procure ajuda.";

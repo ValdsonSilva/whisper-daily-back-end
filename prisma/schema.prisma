@@ -27,11 +27,13 @@ enum Language {
 
 model User {
   id          String   @id @default(cuid())
-  email       String   @unique
+  email       String?  @unique // opcional para login social
   displayName String?
   nickname    String? // "apelido" no app
   locale      Language @default(en_US)
   timezone    String // ex: "America/Fortaleza"
+
+  isAnonymous Boolean @default(true) // se true, usuário temporário (sem conta)
 
   // Preferências do ritual
   checkInHour   Int     @default(20) // 0..23 hora local para notificação

@@ -11,20 +11,24 @@ import { soundRoutes } from '../../modules/sound/sound.routes';
 import { ritualRoutes } from '../../modules/ritual/ritual.routes';
 import { noteRoutes } from '../../modules/note/note.routes';
 import { whisperRoutes } from '../../modules/AI/AI.routes';
+import { registerAnonymousRoutes } from '../../modules/auth/auth.controller.js';
+import auth from './plugins/auth.js';
 
 export const app = Fastify({ logger: true });
 
 await app.register(security);
 await app.register(zodValidator);
 await app.register(prismaPlugin);
+await app.register(auth);
 
 // rotas
 await app.register(healthRoutes, { prefix: '/api' });
-await app.register(userRoutes);
-await app.register(soundRoutes);
-await app.register(ritualRoutes);
-await app.register(noteRoutes);
+await app.register(userRoutes, { prefix: '/api' });
+await app.register(soundRoutes, { prefix: '/api' });
+await app.register(ritualRoutes, { prefix: '/api' });
+await app.register(noteRoutes, { prefix: '/api' });
 await app.register(whisperRoutes, { prefix: "/api" });
+await app.register(registerAnonymousRoutes, { prefix: "/api" });
 
 const PORT = Number(process.env.PORT || 3333);
 

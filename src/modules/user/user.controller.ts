@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { UserRepo } from "./user.repo";
-import prismaPkg from '@prisma/client';
-const { Prisma } = prismaPkg;
+import type { Prisma } from '@prisma/client';
 type IdParams = {
     id: string;
 };
@@ -41,13 +40,14 @@ export const UserController = {
         }
     },
 
+
+
     create: async (
         req: FastifyRequest<{ Body: Prisma.UserCreateInput }>,
         reply: FastifyReply
     ) => {
         try {
             const data = req.body;
-
             const user = await UserRepo.createUser(data);
 
             return reply.code(201).send({ user });

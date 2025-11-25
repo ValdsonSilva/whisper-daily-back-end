@@ -6,7 +6,11 @@ import jwt from '@fastify/jwt';
 export default fp(async (app) => {
     await app.register(jwt, { secret: process.env.JWT_SECRET! });
     app.decorate('auth', async (req: any, reply: any) => {
-        try { await req.jwtVerify(); } catch { return reply.unauthorized(); }
+        try {
+            await req.jwtVerify();
+        } catch {
+            return reply.unauthorized();
+        }
     });
 });
 

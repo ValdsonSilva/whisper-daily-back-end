@@ -1,7 +1,8 @@
 // src/modules/sound/sound.controller.ts
 import { FastifyReply, FastifyRequest } from "fastify";
-import prismaPkg from '@prisma/client';
-const { Prisma } = prismaPkg; import { SoundRepo } from "./sound.repo";
+import type { Prisma } from '@prisma/client';
+import { SoundRepo } from "./sound.repo";
+
 
 type IdParams = {
     id: string;
