@@ -97,6 +97,7 @@ export class WhisperService {
 
     const language = detectLanguage(req.message);
     const inCrisis = containsCrisisSignal(req.message);
+    const userSavedLocale = req.language ?? ''
 
     if (inCrisis) {
       const reply = buildSafetyResponse(language);
@@ -108,6 +109,9 @@ export class WhisperService {
     const userContent = `
                 Extra context:
                 ${contextSnippet}
+
+                Langue: 
+                ${userSavedLocale}
 
                 User message:
                 ${req.message}

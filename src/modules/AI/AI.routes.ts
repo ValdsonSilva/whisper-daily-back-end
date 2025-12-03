@@ -7,19 +7,25 @@ export async function whisperRoutes(app: FastifyInstance) {
     app.post('/ai/whisper/reply', async (req, reply) => {
         try {
             const body = req.body as {
+                locale: string;
                 message: string;
                 mode?: WhisperMode; // manhã / noite / geral (conversa livre)
                 context?: any;
             };
 
             if (!body?.message || typeof body.message !== 'string') {
-                return reply.code(400).send({ message: 'message is required' });
+                return reply.code(400).send({ message: 'Informe a mensagem' });
+            }
+
+            if (!body.locale) {
+                return reply.status(400).send({ message: "Informe o locale" })
             }
 
             const response = await WhisperService.generateReply({
                 message: body.message,
                 mode: body.mode ?? 'general',
                 context: body.context,
+                language: body.locale,
             });
 
             return reply.code(200).send(response);

@@ -2,29 +2,32 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import jwt from "jsonwebtoken";
 import { prisma } from "../../core/config/prisma";
+import  type { Language } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
-type ITimeZone = {
+type IUserRegister = {
+    locale: Language,
     timeZone: string
 }
 
 export async function registerAnonymousRoutes(app: FastifyInstance) {
     app.post(
         "/auth/anonymous",
-        async (req: FastifyRequest<{ Body: ITimeZone }>, reply: FastifyReply) => {
+        async (req: FastifyRequest<{ Body: IUserRegister }>, reply: FastifyReply) => {
             try {
                 // se quiser, pode receber algo como deviceId no body
                 const data = req.body;
 
-                if (!data.timeZone) {
-                    return reply.status(400).send({ message: "Informe o timeZone" });
+                if (!data.timeZone || !data.locale) {
+                    return reply.status(400).send({ message: "O timeZone e o locale são obrigatórios" });
                 }
 
                 // cria usuário anônimo
                 const user = await prisma.user.create({
                     data: {
                         timezone: data.timeZone, // padrão, pode ser atualizado depois
+                        locale: data.locale, // idioma do usuário
                     }
                 });
 
