@@ -3,6 +3,11 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import type { Prisma } from '@prisma/client';
 import { RitualRepo } from "./ritual.repo";
 import { WhisperService } from "../AI/whisper.service";
+import { prisma } from "../../core/config/prisma";
+import { includes } from "zod";
+import { UserRepo } from "../user/user.repo";
+import { messagePromptInUserLanguage } from "../../utils/messagePromptInUserLanguage";
+import { buildServiceMessage } from "../../utils/serviceMessage";
 
 type IdParams = {
     id: string;
@@ -121,6 +126,16 @@ export const RitualController = {
 
             console.log(`Ritual encontrado: ${prevRitual[0]}`);
 
+            const user = await UserRepo.listUserById(id);
+
+            const message = buildServiceMessage({
+                achieved,
+                title: prevRitual[0].title,
+                locale: user?.locale,          // "pt-BR", "en-US", etc.
+                subjectPt: 'ritual',          // opcional
+                subjectEn: 'ritual',          // opcional
+            });
+
             const whisperAI = await WhisperService.generateReply({
                 context: {
                     currentIntention: `${prevRitual[0].title}. My extra notes: ${prevRitual[0].note}`,
@@ -131,7 +146,7 @@ export const RitualController = {
                         }
                     ],
                 },
-                message: `${achieved ? "yes" : "not"} the task: ${prevRitual[0].title}.`,
+                message,
                 mode: "night", // Modo de reflexão ao fim do dia
             });
 
@@ -159,9 +174,15 @@ export const RitualController = {
         try {
             const { userId, localDate, title, note, subtasks } = req.body;
 
+
             if (!userId || !localDate || !title) {
                 return reply.status(400).send({ message: "UserId & localDate & title são obrigatórios" });
             }
+
+            // preciso rastrear o idioma escolhido pelo usuário para adaptar o idioma do prompt da mensagem
+            const user = await UserRepo.listUserById(userId);
+
+            const isLangugeInEnglish = user?.locale === "en_US" ? true : false;
 
             // Chamada à IA para gerar uma reflexão empática sobre a intenção do usuário
             const whisperAI = await WhisperService.generateReply({
@@ -174,7 +195,7 @@ export const RitualController = {
                         }
                     ],
                 },
-                message: `Today my intention is to: ${title}. Which small steps could i do to achiev it?`, // Formatação mais reflexiva para IA
+                message: isLangugeInEnglish ? messagePromptInUserLanguage(title, "en") : messagePromptInUserLanguage(title, "pt"), // Formatação mais reflexiva para IA
                 mode: "morning", // Modo de intenção para o começo do dia
             });
 
