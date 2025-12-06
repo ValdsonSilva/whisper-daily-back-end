@@ -146,7 +146,7 @@ export const RitualController = {
                         }
                     ],
                 },
-                message,
+                message, // idioma do usuário
                 mode: "night", // Modo de reflexão ao fim do dia
             });
 
