@@ -128,6 +128,10 @@ export const RitualController = {
 
             const user = await UserRepo.listUserById(id);
 
+            if (!user) {
+                return reply.status(404).send({ message: "Usuário não encontrado" });
+            }
+
             const message = buildServiceMessage({
                 achieved,
                 title: prevRitual[0].title,
@@ -135,6 +139,8 @@ export const RitualController = {
                 subjectPt: 'ritual',          // opcional
                 subjectEn: 'ritual',          // opcional
             });
+
+            if (!message) return reply.status(500).send({ message: "Erro ao gerar mensagem" });
 
             const whisperAI = await WhisperService.generateReply({
                 context: {
