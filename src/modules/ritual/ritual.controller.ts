@@ -1,13 +1,31 @@
 // src/modules/ritual/ritual.controller.ts
 import { FastifyReply, FastifyRequest } from "fastify";
-import type { Prisma } from '@prisma/client';
+import { RitualStatus, type Prisma } from '@prisma/client';
 import { RitualRepo } from "./ritual.repo";
 import { WhisperService } from "../AI/whisper.service";
-import { prisma } from "../../core/config/prisma";
-import { includes } from "zod";
 import { UserRepo } from "../user/user.repo";
 import { messagePromptInUserLanguage } from "../../utils/messagePromptInUserLanguage";
 import { buildServiceMessage } from "../../utils/serviceMessage";
+
+function parseStatus(input?: string | string[]): RitualStatus[] {
+    if (!input) return [];
+    const list = Array.isArray(input) ? input : String(input).split(',');
+    const map = new Set(
+        list
+            .map(s => s.trim().toUpperCase())
+            .filter(Boolean)
+            .map(s => RitualStatus[s as keyof typeof RitualStatus])
+            .filter(Boolean)
+    );
+    return Array.from(map);
+}
+
+function parseDate(d?: string) {
+    if (!d) return undefined;
+    // aceita "YYYY-MM-DD" ou ISO; se for só data, cria Date no início do dia local
+    const date = new Date(d);
+    return isNaN(+date) ? undefined : date;
+}
 
 type IdParams = {
     id: string;
@@ -28,6 +46,47 @@ export const RitualController = {
         } catch (error: any) {
             return reply.code(500).send({ message: "Erro ao listar rituais", error });
         }
+    },
+
+    // --------- GET /rituals/status ----------------
+    listByStatus: async (req: FastifyRequest, reply: FastifyReply) => {
+        const {
+            status: statusRaw,
+            userId,
+            dateFrom,
+            dateTo,
+            take,
+            cursor,
+            order,
+        } = req.query as {
+            status?: string | string[];
+            userId?: string;
+            dateFrom?: string;
+            dateTo?: string;
+            take?: string;
+            cursor?: string;
+            order?: 'asc' | 'desc' | string;
+        };
+
+        const statuses = parseStatus(statusRaw);
+        if (!statuses.length) {
+            return reply.badRequest('Parâmetro "status" é obrigatório (ex.: PLANNED ou PLANNED,COMPLETED, MISSED).');
+        }
+
+        const takeNum = Math.min(Math.max(parseInt(take ?? '20', 10) || 20, 1), 100);
+        const orderNorm = (order === 'asc' || order === 'desc') ? order : 'desc';
+
+        const { items, nextCursor } = await RitualRepo.listByStatus({
+            status: statuses.length === 1 ? statuses[0] : statuses,
+            userId,
+            dateFrom: parseDate(dateFrom),
+            dateTo: parseDate(dateTo),
+            take: takeNum,
+            cursor: cursor || null,
+            order: orderNorm,
+        });
+
+        return reply.status(200).send({ items, nextCursor });
     },
 
     // ---------- GET /rituals/:id ----------

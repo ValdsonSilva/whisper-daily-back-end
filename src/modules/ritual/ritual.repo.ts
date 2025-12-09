@@ -1,6 +1,21 @@
 // src/modules/ritual/ritual.repo.ts
-import type { Prisma, RitualDay } from "@prisma/client";
+import type { Prisma, RitualDay, RitualStatus } from "@prisma/client";
 import { prisma } from "../../core/config/prisma";
+
+export type ListByStatusParams = {
+    status: RitualStatus | RitualStatus[]; // PLANNED | COMPLETED | MISSED (ou array)
+    userId?: string;                       // opcional: filtra pelo dono
+    dateFrom?: Date;                       // opcional
+    dateTo?: Date;                         // opcional
+    take?: number;                         // default: 20
+    cursor?: string | null;                // paginação
+    order?: 'asc' | 'desc';                // default: 'desc' por data
+};
+
+export type ListByStatusResult = {
+    items: (RitualDay & { subtasks: any[] })[];
+    nextCursor: string | null;
+};
 
 export const RitualRepo = {
 
@@ -10,6 +25,46 @@ export const RitualRepo = {
             where: { id },
             include: { subtasks: true },
         });
+    },
+
+
+    // ---------- Listar por status (com filtros e paginação por cursor) ----------
+    listByStatus: async (params: ListByStatusParams): Promise<ListByStatusResult> => {
+        const {
+            status,
+            userId,
+            dateFrom,
+            dateTo,
+            take = 20,
+            cursor = null,
+            order = 'desc',
+        } = params;
+
+        // query
+        const where: Prisma.RitualDayWhereInput = {
+            status: Array.isArray(status) ? { in: status } : status,
+            ...(userId ? { userId } : {}),
+            ...(dateFrom || dateTo ? {
+                        localDate: {
+                            ...(dateFrom ? { gte: dateFrom } : {}),
+                            ...(dateTo ? { lte: dateTo } : {}),
+                        },
+                    }   : {}),
+        };
+
+        const rows = await prisma.ritualDay.findMany({
+            where,
+            include: { subtasks: true },
+            orderBy: { localDate: order },         // ajuste para o seu campo de ordenação preferido
+            take: take + 1,                        // pega 1 a mais para saber se tem próxima página
+            ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        });
+
+        const hasMore = rows.length > take;
+        const items = hasMore ? rows.slice(0, take) : rows;
+        const nextCursor = hasMore ? items[items.length - 1].id : null;
+
+        return { items, nextCursor };
     },
 
     findByUserAndDate: async (
@@ -49,6 +104,8 @@ export const RitualRepo = {
             include: { subtasks: true },
         });
     },
+
+
 
     create: async (data: Prisma.RitualDayCreateInput): Promise<RitualDay> => {
         return await prisma.ritualDay.create({

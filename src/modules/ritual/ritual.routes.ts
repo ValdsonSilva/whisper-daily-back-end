@@ -6,6 +6,9 @@ export async function ritualRoutes(app: FastifyInstance) {
     // Rota para listar todos os rituais de um usuário
     app.get("/rituals", RitualController.listAll);
 
+    // GET /rituals?status=PLANNED,COMPLETED
+    app.get("/rituals/status", RitualController.listByStatus);
+
     // Rota para buscar um ritual específico por ID
     app.get("/rituals/:id", RitualController.listById);
 
