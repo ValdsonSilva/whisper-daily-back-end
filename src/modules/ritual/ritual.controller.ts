@@ -124,7 +124,10 @@ export const RitualController = {
                 return reply.status(404).send({ message: "Ritual não encontrado" });
             }
 
-            console.log(`Ritual encontrado: ${prevRitual[0]}`);
+            console.log("Ritual encontrado:", prevRitual[0]);
+            // ou, se quiser ver tudo em JSON:
+            console.log("Ritual encontrado JSON:", JSON.stringify(prevRitual[0], null, 2));
+
 
             const user = await UserRepo.listUserById(id);
 
@@ -159,8 +162,10 @@ export const RitualController = {
             if (!whisperAI) {
                 return reply.status(500).send({ message: "Erro no assistente de IA" });
             }
-
-            console.log(`\nResposta da IA: ${whisperAI}`);
+            console.log("Resposta da IA:", whisperAI);
+            console.log("Resposta da IA (reply):", whisperAI.reply);
+            // ou JSON:
+            console.log("Resposta da IA JSON:", JSON.stringify(whisperAI, null, 2));
 
             const localDate = new Date();
             const ritual = await RitualRepo.registerCheckIn(id, localDate, { achieved, aiReply: whisperAI.reply });
