@@ -167,8 +167,8 @@ export const RitualController = {
             // ou JSON:
             console.log("Resposta da IA JSON:", JSON.stringify(whisperAI, null, 2));
 
-            const localDate = new Date();
-            const ritual = await RitualRepo.registerCheckIn(id, localDate, { achieved, aiReply: whisperAI.reply });
+            // const localDate = new Date();
+            const ritual = await RitualRepo.registerCheckIn(id, prevRitual[0].localDate, { achieved, aiReply: whisperAI.reply });
             console.log('Ritual salvo:', ritual);
 
             return reply.code(200).send({ ritual });
