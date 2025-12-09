@@ -7,17 +7,16 @@ import { UserRepo } from "../user/user.repo";
 import { messagePromptInUserLanguage } from "../../utils/messagePromptInUserLanguage";
 import { buildServiceMessage } from "../../utils/serviceMessage";
 
-function parseStatus(input?: string | string[]): RitualStatus[] {
+function parseStatus(input?: RitualStatus | RitualStatus[]): RitualStatus[] {
     if (!input) return [];
-    const list = Array.isArray(input) ? input : String(input).split(',');
-    const map = new Set(
-        list
-            .map(s => s.trim().toUpperCase())
-            .filter(Boolean)
-            .map(s => RitualStatus[s as keyof typeof RitualStatus])
-            .filter(Boolean)
-    );
-    return Array.from(map);
+
+    // Garante que é um array, mantendo a tipagem correta
+    const list = Array.isArray(input) ? input : [input];
+
+    // Usa Set apenas para remover duplicatas
+    const uniqueStatuses = new Set(list);
+
+    return Array.from(uniqueStatuses);
 }
 
 function parseDate(d?: string) {
@@ -51,7 +50,7 @@ export const RitualController = {
     // --------- GET /rituals/status ----------------
     listByStatus: async (req: FastifyRequest, reply: FastifyReply) => {
         const {
-            status: statusRaw,
+            status,
             userId,
             dateFrom,
             dateTo,
@@ -59,7 +58,7 @@ export const RitualController = {
             cursor,
             order,
         } = req.query as {
-            status?: string | string[];
+            status?: RitualStatus | RitualStatus[];
             userId?: string;
             dateFrom?: string;
             dateTo?: string;
@@ -68,7 +67,7 @@ export const RitualController = {
             order?: 'asc' | 'desc' | string;
         };
 
-        const statuses = parseStatus(statusRaw);
+        const statuses = parseStatus(status);
         if (!statuses.length) {
             return reply.badRequest('Parâmetro "status" é obrigatório (ex.: PLANNED ou PLANNED,COMPLETED, MISSED).');
         }
