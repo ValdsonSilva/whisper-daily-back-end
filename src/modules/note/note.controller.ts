@@ -14,6 +14,8 @@ export const NoteController = {
         try {
             const notes = await noteRepo.listAll(id, userId);
 
+            console.log(notes)
+
             if (notes.length === 0) {
                 return reply.code(404).send({ message: "Notas não encontradas" });
             }
