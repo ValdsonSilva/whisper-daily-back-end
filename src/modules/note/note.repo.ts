@@ -6,8 +6,13 @@ export const noteRepo = {
         id?: string,
         userId?: string
     ): Promise<Note[]> => {
+        // O objeto 'where' aceitará { id?: string, userId?: string }
+        // e incluirá apenas os campos que não são undefined.
         return await prisma.note.findMany({
-            where: { id, userId }
+            where: {
+                id: id,      // ou simplesmente 'id' em ES6+
+                userId: userId // ou simplesmente 'userId' em ES6+
+            }
         });
     },
 
