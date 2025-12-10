@@ -1,9 +1,14 @@
-import type {Note, Prisma} from '@prisma/client';
+import type { Note, Prisma } from '@prisma/client';
 import { prisma } from "../../core/config/prisma";
 
 export const noteRepo = {
-    listAll: async (): Promise<Note[]> => {
-        return await prisma.note.findMany();
+    listAll: async (
+        id?: string,
+        userId?: string
+    ): Promise<Note[]> => {
+        return await prisma.note.findMany({
+            where: { id, userId }
+        });
     },
 
     listNoteById: async (id: string): Promise<Note | null> => {

@@ -9,9 +9,10 @@ type IdParams = {
 
 export const NoteController = {
     // ---------- GET /notes ----------
-    listAll: async (req: FastifyRequest, reply: FastifyReply) => {
+    listAll: async (req: FastifyRequest<{ Params: { id: string, userId: string } }>, reply: FastifyReply) => {
+        const { id, userId } = req.params;
         try {
-            const notes = await noteRepo.listAll();
+            const notes = await noteRepo.listAll(id, userId);
 
             if (notes.length === 0) {
                 return reply.code(404).send({ message: "Notas não encontradas" });
