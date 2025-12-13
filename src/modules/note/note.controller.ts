@@ -11,6 +11,7 @@ export const NoteController = {
     // ---------- GET /notes ----------
     listAll: async (req: FastifyRequest<{ Params: { id?: string, userId?: string } }>, reply: FastifyReply) => {
         const { id, userId } = req.params;
+        
         try {
             const notes = await noteRepo.listAll(id, userId);
 
