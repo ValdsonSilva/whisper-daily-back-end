@@ -13,6 +13,9 @@ import { noteRoutes } from '../../modules/note/note.routes';
 import { whisperRoutes } from '../../modules/AI/AI.routes';
 import { registerAnonymousRoutes } from '../../modules/auth/auth.controller.js';
 import auth from './plugins/auth.js';
+import multipart from '@fastify/multipart';
+import { registerNoteRoutes } from '../../modules/note/note.controller.js';
+
 
 export const app = Fastify({ logger: true });
 
@@ -20,13 +23,17 @@ await app.register(security);
 await app.register(zodValidator);
 await app.register(prismaPlugin);
 await app.register(auth);
+await app.register(multipart, {
+  attachFieldsToBody: false, // vamos ler via req.parts()
+  limits: { files: 10, fileSize: 15 * 1024 * 1024 }, // 10 arquivos, 15MB cada (ajuste)
+});
 
 // rotas
 await app.register(healthRoutes, { prefix: '/api' });
 await app.register(userRoutes, { prefix: '/api' });
 await app.register(soundRoutes, { prefix: '/api' });
 await app.register(ritualRoutes, { prefix: '/api' });
-await app.register(noteRoutes, { prefix: '/api' });
+await app.register(registerNoteRoutes, { prefix: '/api' });
 await app.register(whisperRoutes, { prefix: "/api" });
 await app.register(registerAnonymousRoutes, { prefix: "/api" });
 

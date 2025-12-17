@@ -118,8 +118,31 @@ model Note {
   updatedAt  DateTime  @updatedAt
   archivedAt DateTime?
 
-  user User @relation(fields: [userId], references: [id])
+  user            User             @relation(fields: [userId], references: [id])
+  noteAttachments NoteAttachment[]
 
+  @@index([userId, createdAt])
+}
+
+model NoteAttachment {
+  id               String   @id @default(cuid())
+  noteId           String
+  userId           String
+  url              String
+  secureUrl        String
+  publicId         String   @unique
+  resourceType     String // image | video | raw | auto (retornado pelo Cloudinary)
+  format           String?
+  bytes            Int?
+  width            Int?
+  height           Int?
+  duration         Float?
+  originalFilename String?
+  createdAt        DateTime @default(now())
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([noteId, createdAt])
   @@index([userId, createdAt])
 }
 
