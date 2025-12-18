@@ -16,9 +16,10 @@ export async function registerNoteRoutes(app: FastifyInstance) {
     // const mustAuth = [app.authenticate].filter(Boolean);
 
     // GET /notes
-    app.get('/notes', async (req: any) => {
+    app.get('/notes', { preHandler: [app.auth] }, async (req: any) => {
         const userId = req.user.sub as string;
         const { archived, take, cursor, order } = req.query as {
+            // userId: string;
             archived?: string;
             take?: string;
             cursor?: string;
@@ -38,7 +39,7 @@ export async function registerNoteRoutes(app: FastifyInstance) {
     });
 
     // GET /notes/:id
-    app.get<{ Params: { id: string } }>('/notes/:id', async (req: any, reply) => {
+    app.get<{ Params: { id: string } }>('/notes/:id', { preHandler: [app.auth] }, async (req: any, reply) => {
         const userId = req.user.sub as string;
         const note = await NoteRepo.findById(req.params.id, userId);
         if (!note) return reply.notFound('Nota não encontrada');
@@ -46,7 +47,7 @@ export async function registerNoteRoutes(app: FastifyInstance) {
     });
 
     // POST /notes  (multipart: title, content, files[])
-    app.post('/notes', async (req: any, reply) => {
+    app.post('/notes', { preHandler: [app.auth] }, async (req: any, reply) => {
         const userId = req.user.sub as string;
 
         const parts = req.parts();
@@ -96,7 +97,7 @@ export async function registerNoteRoutes(app: FastifyInstance) {
     });
 
     // PATCH /notes/:id  (pode atualizar título/conteúdo, adicionar e remover anexos)
-    app.patch<{ Params: { id: string } }>('/notes/:id', async (req: any, reply) => {
+    app.patch<{ Params: { id: string } }>('/notes/:id', { preHandler: [app.auth] }, async (req: any, reply) => {
         const userId = req.user.sub as string;
         const noteId = req.params.id;
 
@@ -163,21 +164,21 @@ export async function registerNoteRoutes(app: FastifyInstance) {
     });
 
     // POST /notes/:id/archive
-    app.post<{ Params: { id: string } }>('/notes/:id/archive', async (req: any, reply) => {
+    app.post<{ Params: { id: string } }>('/notes/:id/archive', { preHandler: [app.auth] }, async (req: any, reply) => {
         const userId = req.user.sub as string;
         await NoteRepo.archive(req.params.id, userId);
         reply.code(204).send();
     });
 
     // POST /notes/:id/restore
-    app.post<{ Params: { id: string } }>('/notes/:id/restore', async (req: any, reply) => {
+    app.post<{ Params: { id: string } }>('/notes/:id/restore', { preHandler: [app.auth] }, async (req: any, reply) => {
         const userId = req.user.sub as string;
         await NoteRepo.restore(req.params.id, userId);
         reply.code(204).send();
     });
 
     // DELETE /notes/:id  (hard delete) — remove nota e apaga anexos no Cloudinary
-    app.delete<{ Params: { id: string } }>('/notes/:id', async (req: any, reply) => {
+    app.delete<{ Params: { id: string } }>('/notes/:id', { preHandler: [app.auth] }, async (req: any, reply) => {
         const userId = req.user.sub as string;
         const { attachmentPublicIds } = await NoteRepo.deleteHard(req.params.id, userId);
 
@@ -191,7 +192,8 @@ export async function registerNoteRoutes(app: FastifyInstance) {
     // DELETE /notes/:noteId/attachments/:attachmentId
     app.delete<{ Params: { noteId: string; attachmentId: string } }>(
         '/notes/:noteId/attachments/:attachmentId',
-        async (req: any, reply) => {
+        { preHandler: [app.auth] }
+        , async (req: any, reply) => {
             const userId = req.user.sub as string;
             const att = await NoteRepo.findAttachmentById(req.params.attachmentId, userId);
             if (!att || att.noteId !== req.params.noteId) return reply.notFound('Anexo não encontrado');
