@@ -131,7 +131,7 @@ export async function registerNoteRoutes(app: FastifyInstance) {
                 removeAttachmentIds.map((id: string) => NoteRepo.findAttachmentById(id, userId))
             );
             for (const a of found) {
-                if (a) toDestroy.push({ publicId: a.publicId, resourceType: (a.resourceType as any) || 'image' });
+                if (a) toDestroy.push({ publicId: a.publicId, resourceType: (a.resourceType as any) || 'auto' });
             }
         }
 
