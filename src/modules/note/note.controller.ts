@@ -12,8 +12,12 @@ function normalizeOrder(order?: string) {
     return order === 'asc' || order === 'desc' ? order : 'desc';
 }
 
+const normalizeResourceType = (rt?: string) => {
+    if (rt === "image" || rt === "video" || rt === "raw") return rt;
+    return "image"; // fallback seguro (ou 'raw' se você anexa muito PDF)
+};
+
 export async function registerNoteRoutes(app: FastifyInstance) {
-    // const mustAuth = [app.authenticate].filter(Boolean);
 
     // GET /notes
     app.get('/notes', { preHandler: [app.auth] }, async (req: any) => {
@@ -124,14 +128,16 @@ export async function registerNoteRoutes(app: FastifyInstance) {
         const results = await Promise.all(uploads);
 
         // vamos destruir no Cloudinary somente após remover do banco com sucesso
-        const toDestroy: Array<{ publicId: string; resourceType: 'image' | 'video' | 'raw' | 'auto' }> = [];
+        const toDestroy: Array<{ publicId: string; resourceType: 'image' | 'video' | 'raw' }> = [];
+
         if (removeAttachmentIds.length) {
             // coletar publicIds antes para destruir depois
             const found = await Promise.all(
                 removeAttachmentIds.map((id: string) => NoteRepo.findAttachmentById(id, userId))
             );
+            req.log.info({ removeAttachmentIds, toDestroy }, "Destroy queue");
             for (const a of found) {
-                if (a) toDestroy.push({ publicId: a.publicId, resourceType: (a.resourceType as any) || 'auto' });
+                if (a) toDestroy.push({ publicId: a.publicId, resourceType: normalizeResourceType(a.resourceType) });
             }
         }
 
@@ -155,10 +161,24 @@ export async function registerNoteRoutes(app: FastifyInstance) {
             })),
         });
 
-        // destruir no Cloudinary fora da transação
-        await Promise.all(
+        const destroyResults = await Promise.allSettled(
             toDestroy.map((x) => destroyFromCloudinary(x.publicId, x.resourceType))
-        ).catch(() => { /* se falhar, você pode enfileirar em uma outbox para retry */ });
+        );
+
+        destroyResults.forEach((r, i) => {
+            const item = toDestroy[i];
+
+            if (r.status === "rejected") {
+                req.log.error({ err: r.reason, item }, "Cloudinary destroy rejected");
+                return;
+            }
+
+            if (r.value.result !== "ok") {
+                req.log.warn({ item, destroy: r.value }, "Cloudinary destroy did not delete");
+            } else {
+                req.log.info({ item, destroy: r.value }, "Cloudinary destroy ok");
+            }
+        });
 
         return updated;
     });
