@@ -202,11 +202,14 @@ export async function registerNoteRoutes(app: FastifyInstance) {
         const userId = req.user.sub as string;
         const { attachmentPublicIds } = await NoteRepo.deleteHard(req.params.id, userId);
 
-        await Promise.allSettled(
-            attachmentPublicIds.map((publicId) => destroyFromCloudinary(publicId, 'auto'))
-        );
-
-        reply.code(204).send();
+        if (attachmentPublicIds.length === 0) {
+            reply.code(204).send();
+        } else {
+            await Promise.allSettled(
+                attachmentPublicIds.map((publicId) => destroyFromCloudinary(publicId, 'auto'))
+            );
+            reply.code(204).send();
+        }
     });
 
     // DELETE /notes/:noteId/attachments/:attachmentId

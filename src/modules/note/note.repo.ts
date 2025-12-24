@@ -185,11 +185,13 @@ export const noteRepo = {
     deleteHard: async (id: string, userId: string): Promise<{ attachmentPublicIds: string[] }> => {
         // Retorna publicIds para remoção no Cloudinary (fora da transação)
         return prisma.$transaction(async (tx) => {
+            // vai procurar os anexos com base no id da nota do usuário
             const atts = await tx.noteAttachment.findMany({
                 where: { noteId: id, userId },
                 select: { publicId: true, resourceType: true },
             });
 
+            // deleta as notas
             await tx.note.deleteMany({ where: { id, userId } });
 
             return { attachmentPublicIds: atts.map((a) => a.publicId) };
