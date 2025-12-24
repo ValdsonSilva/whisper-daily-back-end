@@ -9,7 +9,6 @@ import healthRoutes from '../../modules/health/health.routes';
 import { userRoutes } from '../../modules/user/user.routes';
 import { soundRoutes } from '../../modules/sound/sound.routes';
 import { ritualRoutes } from '../../modules/ritual/ritual.routes';
-import { noteRoutes } from '../../modules/note/note.routes';
 import { whisperRoutes } from '../../modules/AI/AI.routes';
 import { registerAnonymousRoutes } from '../../modules/auth/auth.controller.js';
 import auth from './plugins/auth.js';

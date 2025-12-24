@@ -25,6 +25,12 @@ enum Language {
   es_ES
 }
 
+enum AiRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
 model User {
   id          String   @id @default(cuid())
   email       String?  @unique // opcional para login social
@@ -48,7 +54,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sound AmbientSound? @relation(fields: [soundId], references: [id])
+  sound     AmbientSound? @relation(fields: [soundId], references: [id])
+  aiThreads AiThread[]
 }
 
 model AmbientSound {
@@ -144,6 +151,39 @@ model NoteAttachment {
 
   @@index([noteId, createdAt])
   @@index([userId, createdAt])
+}
+
+model AiThread {
+  id            String    @id @default(cuid())
+  userId        String
+  title         String? // opcional: você pode salvar o assunto
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime  @default(now())
+  deletedAt     DateTime?
+
+  user     User        @relation(fields: [userId], references: [id])
+  messages AiMessage[]
+
+  @@index([userId, lastMessageAt])
+  @@index([deletedAt])
+}
+
+model AiMessage {
+  id        String   @id @default(cuid())
+  threadId  String
+  role      AiRole
+  content   String // use TEXT (Postgres) por padrão
+  model     String? // opcional: modelo usado na resposta (ex.: "gpt-4o-mini")
+  tokens    Int? // opcional: total de tokens
+  latencyMs Int? // opcional: métrica simples
+  error     String? // opcional: se a chamada falhou
+  meta      Json? // opcional: payloads adicionais
+  createdAt DateTime @default(now())
+
+  thread AiThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
 }
 
 // Opcional futuro (não usar no MVP se quiser enxuto):

@@ -1,6 +1,12 @@
 import { env } from "../../core/config/env"
 import { WHISPER_SYSTEM_PROMPT } from './prompt';
 import { WhisperRequest, WhisperResponse } from './whisper.huggingFace.types';
+import type { FastifyInstance } from 'fastify';
+import { askAi } from './provider';
+import type { AiRole } from '@prisma/client';
+import { AiChatRepo } from "./AiChatRepo";
+
+export const aiRoom = (threadId: string) => `ai:${threadId}`;
 
 // Palavras/expressões de crise simples (pode expandir depois)
 const CRISIS_KEYWORDS = [
@@ -156,3 +162,48 @@ export class WhisperService {
 }
 
 // meta-llama/Llama-3.2-3B-Instruct
+
+export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
+  userId: string;
+  content: string;
+  threadId?: string | null;
+}) {
+  const thread = await AiChatRepo.ensureThread(params.userId, params.threadId);
+
+  // 1) mensagem do usuário
+  const userMsg = await AiChatRepo.addMessage({
+    threadId: thread.id,
+    role: 'USER' as AiRole,
+    content: params.content.trim(),
+  });
+  app.io.to(aiRoom(thread.id)).emit('ai:message:new', userMsg);
+
+  // 2) histórico recente no formato do provider
+  const { items: last } = await AiChatRepo.listMessages(thread.id, params.userId, { take: 30 });
+  const history = last.map(m => ({
+    role: m.role === 'ASSISTANT' ? 'assistant' : m.role === 'SYSTEM' ? 'system' : 'user',
+    content: m.content,
+  }));
+
+  app.io.to(aiRoom(thread.id)).emit('ai:typing', { threadId: thread.id, isTyping: true });
+
+  // 3) chama IA
+  let reply = ''; let model: string | undefined; let tokens: number | undefined; let latencyMs: number | undefined; let meta: any | undefined;
+  try {
+    const res = await askAi(app, { userId: params.userId, threadId: thread.id, messages: history as any });
+    reply = res.reply; model = res.model; tokens = res.tokens; latencyMs = res.latencyMs; meta = res.meta;
+  } finally {
+    app.io.to(aiRoom(thread.id)).emit('ai:typing', { threadId: thread.id, isTyping: false });
+  }
+
+  // 4) mensagem da IA
+  const aiMsg = await AiChatRepo.addMessage({
+    threadId: thread.id,
+    role: 'ASSISTANT' as AiRole,
+    content: reply,
+    model, tokens, latencyMs, meta,
+  });
+  app.io.to(aiRoom(thread.id)).emit('ai:message:new', aiMsg);
+
+  return { threadId: thread.id, userMessageId: userMsg.id, aiMessageId: aiMsg.id };
+}
