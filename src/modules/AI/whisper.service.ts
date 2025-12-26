@@ -166,6 +166,7 @@ export class WhisperService {
 
 export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
   userId: string;
+  locale: string;
   content: string;
   threadId?: string | null;
 }) {
@@ -196,7 +197,7 @@ export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
   let latencyMs: number | undefined;
   let meta: any | undefined;
   try {
-    const res = await askAi(app, { userId: params.userId, threadId: thread.id, messages: history as any });
+    const res = await askAi(app, { userId: params.userId, threadId: thread.id, locale: params.locale, messages: history as any });
     reply = res.reply;
     model = res.model;
     tokens = res.tokens;
@@ -211,9 +212,9 @@ export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
     threadId: thread.id,
     role: 'ASSISTANT' as AiRole,
     content: reply,
-    model, 
-    tokens, 
-    latencyMs, 
+    model,
+    tokens,
+    latencyMs,
     meta,
   });
   emit(app, aiRoom(thread.id), 'ai:message:new', aiMsg);

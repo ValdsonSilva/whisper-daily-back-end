@@ -61,9 +61,14 @@ export async function whisperRoutes(app: FastifyInstance) {
     app.post('/ai/chat', { preHandler: mustAuth }, async (req: any, reply) => {
         const userId = req.userId ?? req.user?.sub ?? req.user?.id;
         if (!userId) return reply.unauthorized();
-        const { content, threadId } = req.body as { content: string; threadId?: string | null };
+        const { content, threadId, locale } = req.body as { content: string; locale: string, threadId?: string | null };
+
         if (!content || !content.trim()) return reply.badRequest('Campo "content" é obrigatório.');
-        const result = await sendUserMessageAndAiReply(app, { userId, content, threadId: threadId || null });
+
+        if (!locale) return reply.badRequest("Campo 'locale' é obrigatório.");
+
+        const result = await sendUserMessageAndAiReply(app, { userId, content, locale, threadId: threadId || null });
+
         return reply.code(201).send(result);
     });
 

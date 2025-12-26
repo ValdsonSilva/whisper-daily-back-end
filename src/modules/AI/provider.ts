@@ -4,7 +4,7 @@ type AiAnswerResponse = { reply: string; model?: string; tokens?: number; latenc
 
 export async function askAi(
     app: FastifyInstance,
-    payload: { userId: string; threadId: string; messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> }
+    payload: { userId: string; threadId: string; locale: string; messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> }
 ): Promise<AiAnswerResponse> {
     const route = process.env.AI_INTERNAL_ROUTE || '/ai/answer';
     const res = await app.inject({ method: 'POST', url: route, payload, headers: { 'content-type': 'application/json' } });
