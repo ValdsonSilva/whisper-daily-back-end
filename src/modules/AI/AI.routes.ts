@@ -1,4 +1,3 @@
-// src/modules/whisper/whisper.routes.ts
 import { FastifyInstance } from 'fastify';
 import { aiRoom, WhisperService } from './whisper.service';
 import { WhisperMode } from './whisper.huggingFace.types';

@@ -5,6 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import { askAi } from './provider';
 import type { AiRole } from '@prisma/client';
 import { AiChatRepo } from "./AiChatRepo";
+import { emit } from "../../utils/realtime";
 
 export const aiRoom = (threadId: string) => `ai:${threadId}`;
 
@@ -176,7 +177,8 @@ export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
     role: 'USER' as AiRole,
     content: params.content.trim(),
   });
-  app.io.to(aiRoom(thread.id)).emit('ai:message:new', userMsg);
+
+  emit(app, aiRoom(thread.id), 'ai:message:new', userMsg);
 
   // 2) histórico recente no formato do provider
   const { items: last } = await AiChatRepo.listMessages(thread.id, params.userId, { take: 30 });
@@ -185,15 +187,23 @@ export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
     content: m.content,
   }));
 
-  app.io.to(aiRoom(thread.id)).emit('ai:typing', { threadId: thread.id, isTyping: true });
+  emit(app, aiRoom(thread.id), 'ai:typing', { threadId: thread.id, isTyping: true });
 
   // 3) chama IA
-  let reply = ''; let model: string | undefined; let tokens: number | undefined; let latencyMs: number | undefined; let meta: any | undefined;
+  let reply = '';
+  let model: string | undefined;
+  let tokens: number | undefined;
+  let latencyMs: number | undefined;
+  let meta: any | undefined;
   try {
     const res = await askAi(app, { userId: params.userId, threadId: thread.id, messages: history as any });
-    reply = res.reply; model = res.model; tokens = res.tokens; latencyMs = res.latencyMs; meta = res.meta;
+    reply = res.reply;
+    model = res.model;
+    tokens = res.tokens;
+    latencyMs = res.latencyMs;
+    meta = res.meta;
   } finally {
-    app.io.to(aiRoom(thread.id)).emit('ai:typing', { threadId: thread.id, isTyping: false });
+    emit(app, aiRoom(thread.id), 'ai:typing', { threadId: thread.id, isTyping: false });
   }
 
   // 4) mensagem da IA
@@ -201,9 +211,12 @@ export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
     threadId: thread.id,
     role: 'ASSISTANT' as AiRole,
     content: reply,
-    model, tokens, latencyMs, meta,
+    model, 
+    tokens, 
+    latencyMs, 
+    meta,
   });
-  app.io.to(aiRoom(thread.id)).emit('ai:message:new', aiMsg);
+  emit(app, aiRoom(thread.id), 'ai:message:new', aiMsg);
 
   return { threadId: thread.id, userMessageId: userMsg.id, aiMessageId: aiMsg.id };
 }

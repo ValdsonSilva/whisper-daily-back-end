@@ -14,7 +14,7 @@ import { registerAnonymousRoutes } from '../../modules/auth/auth.controller.js';
 import auth from './plugins/auth.js';
 import multipart from '@fastify/multipart';
 import { registerNoteRoutes } from '../../modules/note/note.controller.js';
-
+import socketIo from './plugins/socket-io.js';
 
 export const app = Fastify({ logger: true });
 
@@ -26,6 +26,7 @@ await app.register(multipart, {
   attachFieldsToBody: false, // vamos ler via req.parts()
   limits: { files: 10, fileSize: 15 * 1024 * 1024 }, // 10 arquivos, 15MB cada (ajuste)
 });
+await app.register(socketIo);
 
 // rotas
 await app.register(healthRoutes, { prefix: '/api' });
@@ -41,6 +42,7 @@ const PORT = Number(process.env.PORT || 3333);
 try {
   await app.listen({ port: PORT, host: '0.0.0.0' });
   app.log.info(`HTTP server running on http://localhost:${PORT}`);
+  app.log.info({ hasIo: app.hasDecorator('io') }, 'socket-io-ready');
 } catch (err) {
   app.log.error(err);
   process.exit(1);
