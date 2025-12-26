@@ -6,6 +6,7 @@ import { askAi } from './provider';
 import type { AiRole } from '@prisma/client';
 import { AiChatRepo } from "./AiChatRepo";
 import { emit } from "../../utils/realtime";
+import { UserRepo } from "../user/user.repo";
 
 export const aiRoom = (threadId: string) => `ai:${threadId}`;
 
@@ -166,7 +167,6 @@ export class WhisperService {
 
 export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
   userId: string;
-  locale: string;
   content: string;
   threadId?: string | null;
 }) {
@@ -190,6 +190,11 @@ export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
 
   emit(app, aiRoom(thread.id), 'ai:typing', { threadId: thread.id, isTyping: true });
 
+  const user = await UserRepo.listUserById(params.userId);
+  if (!user) throw new Error('usuário não encontrado para AI');
+
+  const locale = user.locale;
+
   // 3) chama IA
   let reply = '';
   let model: string | undefined;
@@ -197,7 +202,7 @@ export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
   let latencyMs: number | undefined;
   let meta: any | undefined;
   try {
-    const res = await askAi(app, { userId: params.userId, threadId: thread.id, locale: params.locale, messages: history as any });
+    const res = await askAi(app, { userId: params.userId, threadId: thread.id, locale, messages: history as any });
     reply = res.reply;
     model = res.model;
     tokens = res.tokens;

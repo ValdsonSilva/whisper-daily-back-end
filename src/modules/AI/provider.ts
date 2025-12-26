@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { UserRepo } from '../user/user.repo';
 
 type AiAnswerResponse = { reply: string; model?: string; tokens?: number; latencyMs?: number; meta?: any };
 
