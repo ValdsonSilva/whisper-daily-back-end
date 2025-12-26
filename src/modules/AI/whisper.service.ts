@@ -202,7 +202,7 @@ export async function sendUserMessageAndAiReply(app: FastifyInstance, params: {
   let latencyMs: number | undefined;
   let meta: any | undefined;
   try {
-    const res = await askAi(app, { userId: params.userId, threadId: thread.id, locale, message: history as any });
+    const res = await askAi(app, { userId: params.userId, threadId: thread.id, locale, message: userMsg.content as any });
     reply = res.reply;
     model = res.model;
     tokens = res.tokens;
