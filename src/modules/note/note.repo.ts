@@ -17,7 +17,7 @@ export const noteRepo = {
         take?: number;               // default: 20
         cursor?: string | null;
         order?: 'asc' | 'desc';      // default: desc (mais recentes)
-    }): Promise<{ items: NoteWithAttachments[]; nextCursor: string | null }> => {
+    }): Promise<{ items: NoteWithAttachments[]; nextCursor: string | null, total: number }> => {
         const { userId, archived = false, take = 20, cursor = null, order = 'desc' } = params;
 
         const where: Prisma.NoteWhereInput = {
@@ -33,14 +33,15 @@ export const noteRepo = {
             ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         });
 
-        const hasMore = rows.length > take;
+        const total = rows.length ? rows.length : 0;
+        const hasMore = total > take;
         const slicedRows = hasMore ? rows.slice(0, take) : rows;
         const items = slicedRows.map(row => ({
             ...row,
             attachments: row.noteAttachments,
         })) as NoteWithAttachments[];
         const nextCursor = hasMore ? items[items.length - 1].id : null;
-        return { items, nextCursor };
+        return { items, nextCursor, total };
     },
 
     create: async (params: {

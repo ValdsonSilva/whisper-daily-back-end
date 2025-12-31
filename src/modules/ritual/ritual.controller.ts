@@ -249,28 +249,28 @@ export const RitualController = {
             }
 
             // preciso rastrear o idioma escolhido pelo usuário para adaptar o idioma do prompt da mensagem
-            const user = await UserRepo.listUserById(userId);
+            // const user = await UserRepo.listUserById(userId);
 
-            const isLangugeInEnglish = user?.locale === "en_US" ? true : false;
+            // const isLangugeInEnglish = user?.locale === "en_US" ? true : false;
 
             // Chamada à IA para gerar uma reflexão empática sobre a intenção do usuário
-            const whisperAI = await WhisperService.generateReply({
-                context: {
-                    currentIntention: title, // O título da tarefa como intenção do dia
-                    lastMessages: [
-                        {
-                            from: "user",
-                            text: note || "", // Passando a anotação como mensagem
-                        }
-                    ],
-                },
-                message: isLangugeInEnglish ? messagePromptInUserLanguage(title, "en") : messagePromptInUserLanguage(title, "pt"), // Formatação mais reflexiva para IA
-                mode: "morning", // Modo de intenção para o começo do dia
-            });
+            // const whisperAI = await WhisperService.generateReply({
+            //     context: {
+            //         currentIntention: title, // O título da tarefa como intenção do dia
+            //         lastMessages: [
+            //             {
+            //                 from: "user",
+            //                 text: note || "", // Passando a anotação como mensagem
+            //             }
+            //         ],
+            //     },
+            //     message: isLangugeInEnglish ? messagePromptInUserLanguage(title, "en") : messagePromptInUserLanguage(title, "pt"), // Formatação mais reflexiva para IA
+            //     mode: "morning", // Modo de intenção para o começo do dia
+            // });
 
-            if (!whisperAI) {
-                return reply.status(500).send({ message: "Erro ao gerar resposta da IA" });
-            }
+            // if (!whisperAI) {
+            //     return reply.status(500).send({ message: "Erro ao gerar resposta da IA" });
+            // }
 
             // Agora vamos criar ou atualizar o ritual da manhã no banco de dados
             const ritual = await RitualRepo.upsertMorning(userId, localDate, {
@@ -280,7 +280,7 @@ export const RitualController = {
             });
 
             // Incluímos a resposta da IA no retorno
-            return reply.code(200).send({ ritual, aiReply: whisperAI.reply });
+            return reply.code(200).send({ ritual });
         } catch (error: any) {
             return reply.code(500).send({ message: "Erro ao criar ou atualizar ritual da manhã", error });
         }
