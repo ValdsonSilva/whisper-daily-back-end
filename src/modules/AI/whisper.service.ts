@@ -31,8 +31,8 @@ function containsCrisisSignal(text: string): boolean {
 }
 
 // Resposta fixa de safety mode (sem precisar chamar o modelo)
-function buildSafetyResponse(userLanguage: 'pt-BR' | 'en' | 'other'): string {
-  if (userLanguage === 'pt-BR') {
+function buildSafetyResponse(userLanguage: 'pt_BR' | 'en' | 'other'): string {
+  if (userLanguage === 'pt_BR') {
     return (
       'Sinto muito que você esteja se sentindo assim, isso é realmente pesado.\n' +
       'Eu sou só uma IA e não consigo te proteger de verdade.\n' +
@@ -108,7 +108,7 @@ export class WhisperService {
     const userSavedLocale = req.language 
 
     if (inCrisis) {
-      const reply = buildSafetyResponse(userSavedLocale as 'pt-BR' | 'en' | 'other');
+      const reply = buildSafetyResponse(userSavedLocale as 'pt_BR' | 'en' | 'other');
       return { reply, safetyMode: true };
     }
 
