@@ -15,6 +15,8 @@ import auth from './plugins/auth.js';
 import multipart from '@fastify/multipart';
 import { registerNoteRoutes } from '../../modules/note/note.controller.js';
 import socketIo from './plugins/socket-io.js';
+import { startMissedRitualSweeper } from '../../modules/ritual/missed-wisper.service.js';
+import { startRitualReminderService } from '../../modules/ritual/ritual-reminder.service.js';
 
 export const app = Fastify({ logger: true });
 
@@ -36,6 +38,11 @@ await app.register(ritualRoutes, { prefix: '/api' });
 await app.register(registerNoteRoutes, { prefix: '/api' });
 await app.register(whisperRoutes, { prefix: "/api" });
 await app.register(registerAnonymousRoutes, { prefix: "/api" });
+
+// inicia o job recorrente ao subir o servidor
+startMissedRitualSweeper(app);
+// inicia o lembrete recorrente ao subir o servidor
+startRitualReminderService(app);
 
 const PORT = Number(process.env.PORT || 3333);
 

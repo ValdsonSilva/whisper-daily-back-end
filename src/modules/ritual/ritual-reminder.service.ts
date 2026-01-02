@@ -1,0 +1,70 @@
+// src/modules/rituals/ritual-reminder.service.ts
+import type { FastifyInstance } from 'fastify';
+import { DateTime } from 'luxon';
+import { getReminderUtcForRitual } from '../../utils/time';
+import { emit, userRoom } from '../../utils/realtime';
+import { prisma } from '../../core/config/prisma';
+
+const INTERVAL_MS = 60_000; // 1 min
+const SCAN_LIMIT = 200;     // reduza o batch
+const WINDOW_MINUTES = 5;
+
+let timer: NodeJS.Timeout | null = null;
+let running = false;
+
+export function startRitualReminderService(app: FastifyInstance) {
+    // impede múltiplas inicializações em dev (ts-node-dev/nodemon)
+    if ((global as any)._ritualReminderStarted) {
+        app.log.info('ritual-reminder already started; skipping');
+        return;
+    }
+    (global as any)._ritualReminderStarted = true;
+
+    const tick = async () => {
+        if (running) return;  // evita sobreposição
+        running = true;
+        try {
+            const candidates = await prisma.ritualDay.findMany({
+                where: { status: 'PLANNED', achieved: null, checkInAt: null },
+                include: { user: { select: { id: true, displayName: true, timezone: true, checkInHour: true, checkInMinute: true } } },
+                orderBy: { createdAt: 'asc' },
+                take: SCAN_LIMIT,
+            });
+
+            if (!candidates.length) return;
+
+            const nowUtc = DateTime.utc();
+            const lower = nowUtc.minus({ minutes: WINDOW_MINUTES }).toJSDate();
+            const upper = nowUtc.plus({ minutes: 1 }).toJSDate();
+
+            for (const r of candidates) {
+                const tz = r.user.timezone || 'UTC';
+                const reminderUtc = getReminderUtcForRitual({
+                    localDate: r.localDate, userTimezone: tz,
+                    checkInHour: r.user.checkInHour, checkInMinute: r.user.checkInMinute,
+                });
+                if (reminderUtc >= lower && reminderUtc <= upper) {
+                    emit(app, userRoom(r.userId), 'ritual:reminder', {
+                        ritualId: r.id, title: r.title, reminderAt: reminderUtc,
+                    });
+                }
+            }
+        } catch (err) {
+            app.log.error({ err }, 'ritual-reminder-tick-failed');
+        } finally {
+            running = false;
+        }
+    };
+
+    const schedule = () => {
+        timer = setInterval(() => void tick(), INTERVAL_MS);
+    };
+    schedule();
+
+    // limpa o setInterval no shutdown do Fastify
+    app.addHook('onClose', async () => {
+        if (timer) clearInterval(timer);
+        timer = null;
+        (global as any)._ritualReminderStarted = false;
+    });
+}

@@ -42,14 +42,14 @@ export const RitualRepo = {
 
         // query
         const where: Prisma.RitualDayWhereInput = {
-            status: Array.isArray(status) ? { in: status } : status,
+            status: Array.isArray(status) ? { in: status } : status, archived: false,
             ...(userId ? { userId } : {}),
             ...(dateFrom || dateTo ? {
-                        localDate: {
-                            ...(dateFrom ? { gte: dateFrom } : {}),
-                            ...(dateTo ? { lte: dateTo } : {}),
-                        },
-                    }   : {}),
+                localDate: {
+                    ...(dateFrom ? { gte: dateFrom } : {}),
+                    ...(dateTo ? { lte: dateTo } : {}),
+                },
+            } : {}),
         };
 
         const rows = await prisma.ritualDay.findMany({
@@ -81,7 +81,7 @@ export const RitualRepo = {
 
     listByUser: async (userId: string): Promise<RitualDay[]> => {
         return await prisma.ritualDay.findMany({
-            where: { userId },
+            where: { userId, pastDue: false }, // objetivos ativos (dentro das 24 horas)
             orderBy: { localDate: "desc" },
             include: { subtasks: true },
         });
@@ -193,7 +193,7 @@ export const RitualRepo = {
     registerCheckIn: async (
         userId: string,
         localDate: Date,
-        payload: { achieved: boolean; aiReply?: string | null; microStep?: string | null }
+        payload: { achieved: boolean | null; aiReply?: string | null; microStep?: string | null }
     ): Promise<RitualDay> => {
         const { achieved, aiReply, microStep } = payload;
 

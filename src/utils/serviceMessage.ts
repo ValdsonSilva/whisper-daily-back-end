@@ -2,7 +2,7 @@
 type SupportedLocale = 'pt' | 'en';
 
 interface BuildServiceMessageParams {
-    achieved: boolean;
+    achieved: boolean | null;
     title: string;            // ex.: prevRitual[0].title
     locale?: string | null;   // ex.: "pt-BR", "en-US", etc.
     subjectPt?: string;       // opcional: "tarefa" (default) | "ritual" | ...
@@ -19,12 +19,21 @@ export function buildServiceMessage({
     const lang: SupportedLocale = normalizeLocale(locale);
 
     if (lang === 'pt') {
+
+        if (achieved === null) {
+            return `Não respondi se concluí ou não a ${subjectPt}: ${title}`
+        }
+
         return achieved
             ? `Sim, concluí a ${subjectPt}: ${title}.`
             : `Não concluí a ${subjectPt}: ${title}.`;
     }
 
     // en (fallback)
+    if (achieved === null) {
+        return `I didn't answer if achieved or not the ${subjectPt}: ${title}`;
+    }
+
     return achieved
         ? `Yes, I achieved the ${subjectEn}: ${title}.`
         : `I did not achieve the ${subjectEn}: ${title}.`;

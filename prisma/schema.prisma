@@ -80,6 +80,7 @@ model RitualDay {
   // também guardamos timestamps absolutos em UTC para auditoria
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  archived  Boolean? @default(false) // quando arquivado ("apagado"), não aparece em nenhuma das telas do app
 
   // Momento da manhã ("Hoje eu vou…")
   title  String // objetivo principal do dia
@@ -91,6 +92,9 @@ model RitualDay {
   achieved  Boolean? // null=sem resposta, true/false=sim/não
   aiReply   String? // 2–4 frases empáticas
   microStep String? // sugestão curta para amanhã
+
+  // marca se o “prazo de 24h” já venceu
+  pastDue Boolean @default(false)
 
   // Subtarefas
   subtasks Subtask[]

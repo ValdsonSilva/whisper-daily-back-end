@@ -1,4 +1,14 @@
-import prismaPkg from '@prisma/client';
-const { PrismaClient } = prismaPkg; 
+import { PrismaClient } from '@prisma/client';
 
-export const prisma = new PrismaClient(); // instância global do prisma no projeto
+const globalForPrisma = global as unknown as { prisma?: PrismaClient };
+
+export const prisma =
+    globalForPrisma.prisma ??
+    new PrismaClient({
+        // logs úteis em dev
+        log: [{ emit: 'event', level: 'error' }],
+    });
+
+if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = prisma;
+}

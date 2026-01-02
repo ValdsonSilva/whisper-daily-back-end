@@ -35,6 +35,7 @@ export const RitualController = {
     listAll: async (req: FastifyRequest, reply: FastifyReply) => {
         try {
             const { userId } = req.query as { userId: string };
+            // lista todas os rituais ativos do usuário
             const rituals = await RitualRepo.listByUser(userId);
 
             if (rituals.length === 0) {
@@ -169,7 +170,7 @@ export const RitualController = {
 
     // ---------- POST /rituals/:id/checkin ----------
     registerCheckIn: async (
-        req: FastifyRequest<{ Params: { id: string }; Body: { achieved: boolean; aiReply?: string; microStep?: string } }>,
+        req: FastifyRequest<{ Params: { id: string }; Body: { achieved: boolean | null; aiReply?: string; microStep?: string } }>,
         reply: FastifyReply
     ) => {
         try {
@@ -185,7 +186,6 @@ export const RitualController = {
             console.log("Ritual encontrado:", prevRitual[0]);
             // ou, se quiser ver tudo em JSON:
             console.log("Ritual encontrado JSON:", JSON.stringify(prevRitual[0], null, 2));
-
 
             const user = await UserRepo.listUserById(id);
 
@@ -247,30 +247,6 @@ export const RitualController = {
             if (!userId || !localDate || !title) {
                 return reply.status(400).send({ message: "UserId & localDate & title são obrigatórios" });
             }
-
-            // preciso rastrear o idioma escolhido pelo usuário para adaptar o idioma do prompt da mensagem
-            // const user = await UserRepo.listUserById(userId);
-
-            // const isLangugeInEnglish = user?.locale === "en_US" ? true : false;
-
-            // Chamada à IA para gerar uma reflexão empática sobre a intenção do usuário
-            // const whisperAI = await WhisperService.generateReply({
-            //     context: {
-            //         currentIntention: title, // O título da tarefa como intenção do dia
-            //         lastMessages: [
-            //             {
-            //                 from: "user",
-            //                 text: note || "", // Passando a anotação como mensagem
-            //             }
-            //         ],
-            //     },
-            //     message: isLangugeInEnglish ? messagePromptInUserLanguage(title, "en") : messagePromptInUserLanguage(title, "pt"), // Formatação mais reflexiva para IA
-            //     mode: "morning", // Modo de intenção para o começo do dia
-            // });
-
-            // if (!whisperAI) {
-            //     return reply.status(500).send({ message: "Erro ao gerar resposta da IA" });
-            // }
 
             // Agora vamos criar ou atualizar o ritual da manhã no banco de dados
             const ritual = await RitualRepo.upsertMorning(userId, localDate, {
