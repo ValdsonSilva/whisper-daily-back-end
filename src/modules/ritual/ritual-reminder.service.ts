@@ -4,6 +4,9 @@ import { DateTime } from 'luxon';
 import { getReminderUtcForRitual } from '../../utils/time';
 import { emit, userRoom } from '../../utils/realtime';
 import { prisma } from '../../core/config/prisma';
+import { sendPushToTokens } from '../../core/config/fcm';
+import { buildReminderMessage } from './notification-copy';
+import { sendExpoPush } from '../../core/config/expo';
 
 const INTERVAL_MS = 60_000; // 1 min
 const SCAN_LIMIT = 200;     // reduza o batch
@@ -43,9 +46,43 @@ export function startRitualReminderService(app: FastifyInstance) {
                     localDate: r.localDate, userTimezone: tz,
                     checkInHour: r.user.checkInHour, checkInMinute: r.user.checkInMinute,
                 });
+
                 if (reminderUtc >= lower && reminderUtc <= upper) {
+                    // emit(app, userRoom(r.userId), 'ritual:reminder', {
+                    //     ritualId: r.id, title: r.title, reminderAt: reminderUtc,
+                    // });
+
+                    const message = buildReminderMessage({
+                        displayName: r.user.displayName ?? undefined,
+                        title: r.title,
+                        localDate: r.localDate,
+                        timezone: tz
+                    });
+
+                    // 1) Socket.IO (app aberto)
                     emit(app, userRoom(r.userId), 'ritual:reminder', {
-                        ritualId: r.id, title: r.title, reminderAt: reminderUtc,
+                        ritualId: r.id,
+                        title: r.title,
+                        message,
+                        // dados úteis para a UI
+                        data: { type: 'RITUAL_REMINDER', ritualId: r.id, deepLink: `whisper://ritual/${r.id}` },
+                    });
+
+                    // 2) Expo Push (app fechado/background)
+                    const devices = await prisma.pushDevice.findMany({
+                        where: { userId: r.userId, disabled: false },
+                        select: { token: true },
+                    });
+                    const tokens = devices.map((d) => d.token);
+
+                    await sendExpoPush(tokens, {
+                        title: 'Lembrete do seu ritual',
+                        body: message,
+                        data: {
+                            type: 'RITUAL_REMINDER',
+                            ritualId: r.id,
+                            deepLink: `whisper://ritual/${r.id}`
+                        },
                     });
                 }
             }

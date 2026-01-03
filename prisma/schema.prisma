@@ -54,8 +54,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sound     AmbientSound? @relation(fields: [soundId], references: [id])
-  aiThreads AiThread[]
+  sound       AmbientSound? @relation(fields: [soundId], references: [id])
+  aiThreads   AiThread[]
+  pushDevices PushDevice[]
 }
 
 model AmbientSound {
@@ -188,6 +189,22 @@ model AiMessage {
   thread AiThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
   @@index([threadId, createdAt])
+}
+
+model PushDevice {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique // FCM registration token
+  platform   String // 'ios' | 'android' | 'web'
+  appVersion String? // opcional
+  disabled   Boolean  @default(false)
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, disabled])
 }
 
 // Opcional futuro (não usar no MVP se quiser enxuto):
