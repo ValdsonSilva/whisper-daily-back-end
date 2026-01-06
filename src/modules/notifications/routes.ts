@@ -1,6 +1,5 @@
 import type { FastifyInstance } from 'fastify';
 import { prisma } from '../../core/config/prisma';
-import { isValidExpoToken } from '../../core/config/expo';
 
 export async function registerPushRoutes(app: FastifyInstance) {
   const mustAuth = [app.auth].filter(Boolean);
@@ -13,7 +12,6 @@ export async function registerPushRoutes(app: FastifyInstance) {
     };
 
     if (!token || !platform) return reply.badRequest('token e platform são obrigatórios');
-    if (!isValidExpoToken(token)) return reply.badRequest('Expo push token inválido');
 
     const device = await prisma.pushDevice.upsert({
       where: { token },

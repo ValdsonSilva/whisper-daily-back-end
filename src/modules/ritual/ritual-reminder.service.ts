@@ -99,6 +99,19 @@ export function startRitualReminderService(app: FastifyInstance) {
                         data: { type: 'RITUAL_REMINDER', ritualId: r.id, deepLink: `whisper://ritual/${r.id}` },
                     });
 
+                    app.log.info(
+                        {
+                            ritualId: r.id,
+                            userId: r.userId,
+                            tokensCount: tokens.length,
+                            success: expoResult.success,
+                            failure: expoResult.failure,
+                            ticketErrors: expoResult.ticketErrors,
+                            receiptErrors: expoResult.receiptErrors,
+                        },
+                        'ritual-reminder-push-result'
+                    );
+
                     app.log.info({ ritualId: r.id, expoResult }, 'expo-push-result');
                 }
             }
