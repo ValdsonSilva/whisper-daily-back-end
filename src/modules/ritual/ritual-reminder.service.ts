@@ -99,6 +99,8 @@ export function startRitualReminderService(app: FastifyInstance) {
                         data: { type: 'RITUAL_REMINDER', ritualId: r.id, deepLink: `whisper://ritual/${r.id}` },
                     });
 
+                    console.log("expoResult: ", expoResult)
+
                     app.log.info(
                         {
                             ritualId: r.id,
