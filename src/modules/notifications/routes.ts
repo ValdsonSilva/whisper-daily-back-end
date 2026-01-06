@@ -7,6 +7,7 @@ export async function registerPushRoutes(app: FastifyInstance) {
 
   app.post('/push/devices', { preHandler: mustAuth }, async (req: any, reply) => {
     const userId = req.userId ?? req.user?.sub ?? req.body.userId;
+    
     const { token, platform, appVersion } = req.body as {
       token: string; platform: 'ios' | 'android' | 'web'; appVersion?: string;
     };

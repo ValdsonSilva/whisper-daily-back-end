@@ -4,7 +4,6 @@ import { DateTime } from 'luxon';
 import { getReminderUtcForRitual } from '../../utils/time';
 import { emit, userRoom } from '../../utils/realtime';
 import { prisma } from '../../core/config/prisma';
-import { sendPushToTokens } from '../../core/config/fcm';
 import { buildReminderMessage } from './notification-copy';
 import { sendExpoPush } from '../../core/config/expo';
 
@@ -27,20 +26,20 @@ export function startRitualReminderService(app: FastifyInstance) {
         if (running) return;  // evita sobreposição
         running = true;
         try {
-            const candidates = await prisma.ritualDay.findMany({
+            const rituals = await prisma.ritualDay.findMany({
                 where: { status: 'PLANNED', achieved: null, checkInAt: null },
                 include: { user: { select: { id: true, displayName: true, timezone: true, checkInHour: true, checkInMinute: true } } },
                 orderBy: { createdAt: 'asc' },
                 take: SCAN_LIMIT,
             });
 
-            if (!candidates.length) return;
+            if (!rituals.length) return;
 
             const nowUtc = DateTime.utc();
             const lower = nowUtc.minus({ minutes: WINDOW_MINUTES }).toJSDate();
             const upper = nowUtc.plus({ minutes: 1 }).toJSDate();
 
-            for (const r of candidates) {
+            for (const r of rituals) {
                 const tz = r.user.timezone || 'UTC';
                 const reminderUtc = getReminderUtcForRitual({
                     localDate: r.localDate, userTimezone: tz,
@@ -73,17 +72,34 @@ export function startRitualReminderService(app: FastifyInstance) {
                         where: { userId: r.userId, disabled: false },
                         select: { token: true },
                     });
+
                     const tokens = devices.map((d) => d.token);
 
-                    await sendExpoPush(tokens, {
+                    if (tokens.length === 0) {
+                        app.log.warn({ ritualId: r.id, userId: r.userId }, 'no-push-tokens');
+                        continue;
+                    }
+
+                    app.log.info(
+                        {
+                            ritualId: r.id,
+                            userId: r.userId,
+                            tz,
+                            localDate: r.localDate,
+                            reminderUtc: reminderUtc.toISOString?.() ?? reminderUtc,
+                            tokensCount: tokens.length,
+                            tokenSample: tokens[0]?.slice(-10),
+                        },
+                        'sending-expo-push'
+                    );
+
+                    const expoResult = await sendExpoPush(tokens, {
                         title: 'Lembrete do seu ritual',
                         body: message,
-                        data: {
-                            type: 'RITUAL_REMINDER',
-                            ritualId: r.id,
-                            deepLink: `whisper://ritual/${r.id}`
-                        },
+                        data: { type: 'RITUAL_REMINDER', ritualId: r.id, deepLink: `whisper://ritual/${r.id}` },
                     });
+
+                    app.log.info({ ritualId: r.id, expoResult }, 'expo-push-result');
                 }
             }
         } catch (err) {
@@ -94,6 +110,7 @@ export function startRitualReminderService(app: FastifyInstance) {
     };
 
     const schedule = () => {
+        void tick(); // roda logo ao iniciar
         timer = setInterval(() => void tick(), INTERVAL_MS);
     };
     schedule();

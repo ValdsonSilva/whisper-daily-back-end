@@ -25,6 +25,7 @@ export type PushPayload = {
 };
 
 export async function sendPushToTokens(tokens: string[], payload: PushPayload) {
+    
     if (!tokens.length) return { success: 0, failure: 0 };
     const app = ensureFcm();
     const messaging = app.messaging();
