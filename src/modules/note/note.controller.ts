@@ -33,6 +33,7 @@ export async function registerNoteRoutes(app: FastifyInstance) {
         const takeNum = Math.min(Math.max(parseInt(take ?? '20', 10) || 20, 1), 100);
         const archivedBool = archived === 'true';
 
+        // quando o 
         return NoteRepo.listByUser({
             userId,
             archived: archivedBool,

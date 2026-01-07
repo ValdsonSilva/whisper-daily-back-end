@@ -18,6 +18,7 @@ import socketIo from './plugins/socket-io.js';
 import { startMissedRitualSweeper } from '../../modules/ritual/missed-wisper.service.js';
 import { startRitualReminderService } from '../../modules/ritual/ritual-reminder.service.js';
 import { registerPushRoutes } from '../../modules/notifications/routes.js';
+import { startCompletedPastDueService } from '../../modules/ritual/completed-pastdue.service.js';
 
 export const app = Fastify({ logger: true });
 
@@ -45,6 +46,7 @@ await app.register(registerPushRoutes, { prefix: '/api' });
 startMissedRitualSweeper(app);
 // inicia o lembrete recorrente ao subir o servidor
 startRitualReminderService(app);
+startCompletedPastDueService(app);
 
 const PORT = Number(process.env.PORT || 3333);
 
