@@ -9,6 +9,10 @@ const TOKEN_INVALID_ERRORS = new Set([
   'MalformedPushToken',
 ]);
 
+export function isValidExpoToken(token: string) {
+  return Expo.isExpoPushToken(token);
+}
+
 export async function sendExpoPush(tokens: string[], payload: { title: string; body: string; data?: Record<string, any>; sound?: 'default' | null; priority?: 'default' | 'normal' | 'high'; }) {
   if (!tokens.length) return { success: 0, failure: 0, ticketErrors: [], receiptErrors: [] };
 

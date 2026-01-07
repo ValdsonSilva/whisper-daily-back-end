@@ -81,7 +81,7 @@ export const RitualRepo = {
 
     listByUser: async (userId: string): Promise<RitualDay[]> => {
         return await prisma.ritualDay.findMany({
-            where: { userId, pastDue: false }, // objetivos ativos (dentro das 24 horas)
+            where: { userId, pastDue: false}, // objetivos ativos (dentro das 24 horas)
             orderBy: { localDate: "desc" },
             include: { subtasks: true },
         });
